@@ -25,7 +25,10 @@
     "lint:fix": "vp lint --fix",
     "format": "vp fmt",
     "format:check": "vp fmt --check",
-    "check": "vp check",
+    "lint:go": "golangci-lint run",
+    "check:fe": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm build:frontend && pnpm check:icons && pnpm check:bindings",
+    "check:go": "go vet ./... && go test ./... && pnpm lint:go",
+    "check": "pnpm check:fe && pnpm check:go",
     "check:bindings": "node scripts/check-bindings.mjs",
     "check:icons": "node scripts/check-icons.mjs --dist",
     "prepare": "husky"

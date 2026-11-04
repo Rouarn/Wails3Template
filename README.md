@@ -55,6 +55,10 @@ pnpm build            # wails3 build（Taskfile 流程：bindings → 前端 →
 pnpm package          # 当前平台安装包（任务已定义；仓库内仅验证过 macOS .app，.dmg 与 Windows/Linux 产物尚未生成）
 pnpm typecheck        # vue-tsc 类型检查
 pnpm lint / pnpm format / pnpm format:check
+pnpm lint:go          # golangci-lint run
+pnpm check:fe         # 前端门禁：typecheck + lint + fmt + 构建产物图标校验 + bindings 漂移
+pnpm check:go         # Go 门禁：go vet + go test + golangci-lint
+pnpm check            # 串起 check:fe 与 check:go
 pnpm check:bindings   # 重新生成 bindings 并校验仓库产物无漂移
 pnpm check:icons      # 校验图标类名在 iconify 集合里存在、且产物 CSS 里真有对应规则
 ```
@@ -84,7 +88,7 @@ pnpm check:icons      # 校验图标类名在 iconify 集合里存在、且产�
 ## 架构约定
 
 - **契约单一来源**：Go 的 `internal/contract` 是唯一模型来源；前端类型全部来自生成的 `frontend/bindings`，不手写 DTO。
-- **生成产物入库**：`frontend/bindings` 提交到仓库；改 Go 服务后执行 `wails3 generate bindings -clean=true -ts -i` 并提交。本地用 `pnpm check:bindings` 防漂移；CI 将在门禁阶段落地（当前仓库尚无 workflow）。
+- **生成产物入库**：`frontend/bindings` 提交到仓库；改 Go 服务后执行 `wails3 generate bindings -clean=true -ts -i` 并提交。本地用 `pnpm check:bindings` 防漂移，CI 也会在 `frontend/bindings` 上执行 `git diff --exit-code`（`macos-latest` / `windows-latest` / `ubuntu-24.04` 三平台矩阵）。
 - **图标单一来源**：所有图标类名集中在 `frontend/src/icons.ts` 的 `APP_ICONS`；UnoCSS 的 `safelist` 由该表生成，`scripts/check-icons.mjs` 在构建期校验「集合里存在 + 产物 CSS 里有规则」，动态拼接类名直接报错。
 - **错误回传**：Go 侧统一返回 `*contract.AppError`，经 `application.Options.MarshalError` 序列化为 `{code,message,details}`；前端 `src/bridge/errors.ts` 归一化并附加 15s 超时与取消。
 - **事件**：`app.clock` 每秒推送时间与运行时长，`app.status` 在启动完成/设置保存时推送；前端只在 `src/bridge/events.ts` 订阅。
@@ -96,4 +100,5 @@ pnpm check:icons      # 校验图标类名在 iconify 集合里存在、且产�
 - Windows NSIS 安装包与 MSIX、代码签名：受限于当前 macOS 构建环境，未实机验证。
 - macOS Developer ID 签名与公证：需要证书，模板只保留 `task darwin:sign` / `sign:notarize` 入口。
 - Linux WebKitGTK 渲染差异：未在 Linux 实机验证。
+- GitHub Actions 三平台矩阵：workflow 已入库，但尚未在远端实际跑绿。
 - 自动更新：未实现，也无接入点（代码中没有任何 `app.Updater` / `updater.Init` 引用）。

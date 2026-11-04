@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-24.04]
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: 安装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+
+      - name: 安装 Linux 构建依赖
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev
+
+      - name: 安装 NSIS（Windows）
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install nsis -y --no-progress
+          "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: 安装 Wails CLI 与 Task
+        shell: bash
+        run: |
+          go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
+          go install github.com/go-task/task/v3/cmd/task@v3
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: 安装 golangci-lint
+        shell: bash
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
+
+      - name: 安装前端依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 契约漂移检测
+        run: |
+          pnpm check:bindings
+          git diff --exit-code -- frontend/bindings
+
+      - name: 前端门禁
+        run: pnpm check:fe
+
+      - name: Go 门禁
+        run: pnpm check:go
+
+      - name: 构建当前平台
+        run: pnpm build
+
+      - name: 打包（macOS）
+        if: runner.os == 'macOS'
+        run: wails3 task darwin:package
+
+      - name: 打包（Windows）
+        if: runner.os == 'Windows'
+        run: wails3 task windows:package
+
+      - name: 打包（Linux）
+        if: runner.os == 'Linux'
+        run: wails3 task linux:package
