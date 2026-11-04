@@ -16,6 +16,14 @@ export interface AppInfo {
 }
 
 /**
+ * ClipboardText 是剪贴板读取结果；Available 为 false 表示读不到文本内容。
+ */
+export interface ClipboardText {
+    "available": boolean;
+    "text": string;
+}
+
+/**
  * ClockEvent 每秒推送一次，用于演示后端 → 前端的时间/运行时长推送。
  */
 export interface ClockEvent {
@@ -36,6 +44,41 @@ export interface ClockEvent {
 }
 
 /**
+ * NotificationReceipt 是系统通知的投递回执。
+ */
+export interface NotificationReceipt {
+    "delivered": boolean;
+    "authorized": boolean;
+    "message": string;
+}
+
+/**
+ * SavedFile 是保存对话框的返回值，Bytes 为实际写入的字节数。
+ */
+export interface SavedFile {
+    "canceled": boolean;
+    "path": string;
+    "bytes": number;
+}
+
+/**
+ * SelectedDirectory 是目录选择对话框的返回值。
+ */
+export interface SelectedDirectory {
+    "canceled": boolean;
+    "path": string;
+}
+
+/**
+ * SelectedFiles 是文件选择对话框的返回值；Canceled 用于把「用户取消」与「调用失败」分开。
+ */
+export interface SelectedFiles {
+    "canceled": boolean;
+    "paths": string[] | null;
+    "count": number;
+}
+
+/**
  * Settings 是设置页持久化的用户偏好。
  */
 export interface Settings {
@@ -51,4 +94,31 @@ export interface StatusEvent {
     "state": string;
     "message": string;
     "at": string;
+}
+
+/**
+ * SystemSummary 是「系统信息」表格的数据来源。
+ */
+export interface SystemSummary {
+    "platform": string;
+    "arch": string;
+    "hostname": string;
+    "screenWidth": number;
+    "screenHeight": number;
+    "screenScale": number;
+    "language": string;
+    "theme": string;
+    "systemAppearance": string;
+}
+
+/**
+ * WindowState 是窗口控制卡片的状态回显。
+ */
+export interface WindowState {
+    "maximised": boolean;
+    "fullscreen": boolean;
+    "alwaysOnTop": boolean;
+    "visible": boolean;
+    "width": number;
+    "height": number;
 }

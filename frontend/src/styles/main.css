@@ -5,15 +5,22 @@
   --border-color: rgba(15, 23, 42, 0.12);
   --text-strong: #0f172a;
   --text-muted: rgba(15, 23, 42, 0.62);
+  --code-bg: rgba(15, 23, 42, 0.04);
+  --accent: #6366f1;
+  --accent-soft: rgba(99, 102, 241, 0.12);
 }
 
 :root[data-theme='dark'] {
   --app-bg: #101217;
   --panel-bg: #171a21;
   --sidebar-bg: #14161d;
-  --border-color: rgba(148, 163, 184, 0.22);
+  /* 深色下边框略提亮到 0.3，保证卡片与分隔线可辨但不过重。 */
+  --border-color: rgba(148, 163, 184, 0.3);
   --text-strong: #e2e8f0;
   --text-muted: rgba(226, 232, 240, 0.62);
+  --code-bg: rgba(148, 163, 184, 0.1);
+  --accent: #818cf8;
+  --accent-soft: rgba(129, 140, 248, 0.16);
 }
 
 /* 满高固定外壳：html/body/#app 锁定 100%，页面滚动只发生在主区。 */
@@ -140,4 +147,342 @@ body {
 
 .live-value {
   font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 设置页：四组卡片 + 行式布局 ---------- */
+
+/* 卡片限宽并左对齐，避免在宽窗口下被拉成一条横贯屏幕的空旷长条。 */
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 780px;
+}
+
+.settings-card {
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--panel-bg);
+  padding: 2px 20px 4px;
+}
+
+.settings-card__head {
+  padding: 16px 0 10px;
+}
+
+.settings-card__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.settings-card__desc {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 行内统一间距：上下 14px，分隔线只出现在行之间，卡片首行不重复画线。 */
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.settings-row__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.settings-row__title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.settings-row__desc {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.settings-row__control {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-row__control--path {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.settings-row__value {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-select {
+  width: 200px;
+}
+
+/* 只读路径用等宽字体 + 可复制，不做成可编辑输入框。 */
+.path-value {
+  display: block;
+  max-width: 420px;
+  padding: 5px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--code-bg);
+  font-family: 'SFMono-Regular', ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.copy-error {
+  font-size: 11.5px;
+  color: #e5484d;
+}
+
+/* 主题选择：三张带预览的选项卡，选中态用强调色描边。 */
+.theme-picker {
+  display: flex;
+  gap: 8px;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 92px;
+  padding: 7px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-strong);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.theme-option:hover {
+  background: var(--accent-soft);
+}
+
+.theme-option--active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.theme-option__label {
+  font-size: 11.5px;
+  text-align: center;
+}
+
+.theme-option--active .theme-option__label {
+  font-weight: 600;
+}
+
+.theme-swatch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  height: 38px;
+  padding: 0 7px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.theme-swatch--light {
+  background: #f6f8fb;
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.theme-swatch--dark {
+  background: #171a21;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+/* 跟随系统：斜向分割，一眼看出是「一半浅色一半深色」。 */
+.theme-swatch--system {
+  border-color: transparent;
+  background: linear-gradient(135deg, #f6f8fb 0 50%, #171a21 50% 100%);
+  color: var(--accent);
+}
+
+.theme-swatch__line {
+  display: block;
+  height: 4px;
+  width: 60%;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.75;
+}
+
+.theme-swatch__line--short {
+  width: 38%;
+  opacity: 0.45;
+}
+
+/* ---------- 系统能力页 ---------- */
+
+.capabilities-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 1120px;
+}
+
+.cap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.cap-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--panel-bg);
+}
+
+.cap-card__head {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.cap-card__icon {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 16px;
+}
+
+.cap-card__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.cap-card__desc {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.cap-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cap-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cap-result {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 9px 11px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background: var(--code-bg);
+  font-size: 12px;
+}
+
+.cap-result__title {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.cap-path {
+  font-family: 'SFMono-Regular', ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.cap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 120px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.cap-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.cap-hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.cap-error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #e5484d;
+}
+
+.cap-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cap-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--code-bg);
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.cap-chip b {
+  color: var(--text-strong);
+  font-weight: 600;
 }

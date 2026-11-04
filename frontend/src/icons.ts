@@ -10,9 +10,18 @@
 export const APP_ICONS = {
   navHome: 'i-lucide-house',
   navSettings: 'i-lucide-settings',
+  navCapabilities: 'i-lucide-sliders-horizontal',
   windowMinimise: 'i-lucide-minus',
   windowMaximise: 'i-lucide-maximize',
   windowClose: 'i-lucide-x',
+  windowFullscreen: 'i-lucide-expand',
+  windowPin: 'i-lucide-pin',
+  copy: 'i-lucide-copy',
+  folderOpen: 'i-lucide-folder-open',
+  saveFile: 'i-lucide-save',
+  bell: 'i-lucide-bell',
+  clipboard: 'i-lucide-clipboard',
+  externalLink: 'i-lucide-external-link',
 } as const
 
 export type AppIconName = keyof typeof APP_ICONS

@@ -12,6 +12,7 @@ const store = useAppStore()
 
 const navItems = [
   { name: 'home', to: '/', label: 'nav.home', icon: APP_ICONS.navHome },
+  { name: 'capabilities', to: '/capabilities', label: 'nav.capabilities', icon: APP_ICONS.navCapabilities },
   { name: 'settings', to: '/settings', label: 'nav.settings', icon: APP_ICONS.navSettings },
 ] as const
 

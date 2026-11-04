@@ -3,7 +3,14 @@
 
 export type {
     AppInfo,
+    ClipboardText,
     ClockEvent,
+    NotificationReceipt,
+    SavedFile,
+    SelectedDirectory,
+    SelectedFiles,
     Settings,
-    StatusEvent
+    StatusEvent,
+    SystemSummary,
+    WindowState
 } from "./models.js";

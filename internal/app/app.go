@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/services/notifications"
 
 	"github.com/rouarn/wails3-template/internal/contract"
 	"github.com/rouarn/wails3-template/internal/infra"
@@ -84,9 +85,11 @@ func Run(assets embed.FS) error {
 	systemService := service.NewSystemService(instance, dirs, AppVersion, WailsVersion)
 	settingsService := service.NewSettingsService(instance, settingsStore)
 	windowService := service.NewWindowService(mainWindow)
+	capabilitiesService := service.NewCapabilitiesService(instance, mainWindow, systemService, settingsStore, notifications.New())
 	instance.RegisterService(application.NewService(systemService))
 	instance.RegisterService(application.NewService(settingsService))
 	instance.RegisterService(application.NewService(windowService))
+	instance.RegisterService(application.NewService(capabilitiesService))
 
 	startedAt := time.Now()
 	go emitClock(instance, startedAt)

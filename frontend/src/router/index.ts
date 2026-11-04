@@ -18,6 +18,12 @@ const router = createRouter({
           meta: { title: '首页' },
         },
         {
+          path: 'capabilities',
+          name: 'capabilities',
+          component: () => import('../views/CapabilitiesView.vue'),
+          meta: { title: '系统能力' },
+        },
+        {
           path: 'settings',
           name: 'settings',
           component: () => import('../views/SettingsView.vue'),
