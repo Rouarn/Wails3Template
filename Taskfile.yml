@@ -15,13 +15,23 @@ includes:
   linux: ./build/linux/Taskfile.yml
 
 tasks:
+  cli:check:
+    summary: 校验 Wails3 CLI 版本（>= v3.1.0，支持 WAILS3_BIN）
+    internal: true
+    cmds:
+      - node scripts/wails.mjs check
+
   build:
     summary: 构建当前平台的可执行文件
+    deps:
+      - task: cli:check
     cmds:
       - task: '{{.GOOS}}:build'
 
   package:
     summary: 打包当前平台的安装产物
+    deps:
+      - task: cli:check
     cmds:
       - task: '{{.GOOS}}:package'
 
@@ -31,6 +41,6 @@ tasks:
       - task: '{{.GOOS}}:run'
 
   dev:
-    summary: 开发模式（热重载），推荐走 pnpm dev 以自动挑选端口
+    summary: 开发模式（热重载），自动挑选端口并校验 CLI 版本
     cmds:
-      - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
+      - node scripts/dev.mjs

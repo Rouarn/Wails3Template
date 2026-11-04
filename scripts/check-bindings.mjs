@@ -2,11 +2,17 @@
 // 防漂移：重新生成 bindings，若与仓库中的产物有差异则失败。
 import { execFileSync } from 'node:child_process'
 import process from 'node:process'
+import { abortWith, ensureWailsCli } from './lib/wails.mjs'
 
-const WAILS_BIN = process.env.WAILS3_BIN ?? 'wails3'
+let cli
+try {
+  cli = ensureWailsCli()
+} catch (error) {
+  abortWith(error.message)
+}
 
 try {
-  execFileSync(WAILS_BIN, ['generate', 'bindings', '-clean=true', '-ts', '-i'], { stdio: 'inherit' })
+  execFileSync(cli.bin, ['generate', 'bindings', '-clean=true', '-ts', '-i'], { stdio: 'inherit' })
 } catch (error) {
   console.error(`[bindings] 生成失败：${error.message}`)
   process.exit(1)

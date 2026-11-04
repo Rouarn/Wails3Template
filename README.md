@@ -7,7 +7,7 @@
 | 工具 | 版本 | 说明 |
 | --- | --- | --- |
 | Go | 1.26.0 | Wails v3 官方模板要求（见 `go.mod`） |
-| Wails CLI | v3.1.0 | `go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0`，必须与 `go.mod` 一致 |
+| Wails CLI | >= v3.1.0 | `go install github.com/wailsapp/wails/v3/cmd/wails3@latest`（当前解析到 v3.1.0），须与 `go.mod` 一致 |
 | Node.js | >= 22.18.0 | 与 pnpm 12 的引擎要求一致 |
 | pnpm | 12.16.1 | `corepack enable && corepack prepare pnpm@12.16.1 --activate` |
 | Task | 3.x | Wails 构建脚本依赖 `task`（`brew install go-task`） |
@@ -15,13 +15,44 @@
 
 > macOS 打包 DMG 需要 Xcode 命令行工具；Windows 安装包需要 NSIS；Linux 打包需要 `nfpm`（由 Wails 工具链按需拉取）。
 
+## CLI 版本要求（Wails3 >= v3.1.0）
+
+`pnpm dev` / `pnpm build` / `pnpm package` / `pnpm check:bindings` / Taskfile 任务都会先校验 CLI 版本（实现见 [scripts/lib/wails.mjs](scripts/lib/wails.mjs)），低于 **v3.1.0** 直接中止并给出中文提示，不会静默降级参数——旧版生成的 bindings 与项目契约不兼容。
+
+```bash
+wails3 version        # 查看当前版本，例如 v3.1.0
+pnpm cli:check        # 走项目内的校验逻辑，打印实际二进制与版本
+```
+
+安装/升级（推荐跟随稳定线，当前 `@latest` = v3.1.0）：
+
+```bash
+go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+which wails3          # 通常是 $(go env GOPATH)/bin/wails3
+```
+
+需要固定到某一版本时把 `@latest` 换成 `@v3.1.0`。若机器上还残留旧版（`go/bin/wails3` 之外还有 alpha 版在 PATH 前面），可以显式指定二进制：
+
+```bash
+WAILS3_BIN=/path/to/wails3 pnpm dev
+```
+
+版本过低时的典型报错（搜这条即可定位）：
+
+```
+ERROR   Error: flag provided but not defined: -config
+        See 'wails dev --help' for usage
+```
+
+`wails3 generate bindings -clean=true -ts -i` 在旧版上则会报 `flag provided but not defined: -clean`（或 `-ts`）；都说明 CLI 需要升级。
+
 ## 常用命令
 
 ```bash
 pnpm install          # 安装 workspace 依赖（含 frontend）
 pnpm dev              # 自动挑选空闲端口并启动 wails3 dev
 pnpm build            # wails3 build（Taskfile 流程：bindings → 前端 → Go 二进制）
-wails3 package        # 当前平台安装包（macOS: .app/.dmg；Windows: NSIS；Linux: AppImage/deb/rpm）
+pnpm package          # 当前平台安装包（macOS: .app/.dmg；Windows: NSIS；Linux: AppImage/deb/rpm）
 pnpm typecheck        # vue-tsc 类型检查
 pnpm lint / pnpm format / pnpm format:check
 pnpm check:bindings   # 重新生成 bindings 并校验仓库产物无漂移
@@ -46,7 +77,7 @@ pnpm check:bindings   # 重新生成 bindings 并校验仓库产物无漂移
 │   ├── src/layouts/        # 双轨外壳（侧栏 + 主区）与单栏外壳
 │   └── bindings/           # wails3 generate bindings 产物，入库并由 CI 防漂移
 ├── build/                  # Taskfile 与三平台打包资源（无 ios/android）
-└── scripts/                # dev.mjs（端口挑选与清理）、check-bindings.mjs
+└── scripts/                # dev.mjs（端口挑选与清理）、wails.mjs（CLI 版本门禁与透传）、lib/wails.mjs
 ```
 
 ## 架构约定

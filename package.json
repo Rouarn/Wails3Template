@@ -16,9 +16,10 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "wails3 build",
+    "build": "node scripts/wails.mjs build",
     "build:frontend": "pnpm --filter @wails3-template/frontend build",
-    "package": "wails3 package",
+    "package": "node scripts/wails.mjs package",
+    "cli:check": "node scripts/wails.mjs check",
     "typecheck": "pnpm --filter @wails3-template/frontend typecheck",
     "lint": "vp lint",
     "lint:fix": "vp lint --fix",

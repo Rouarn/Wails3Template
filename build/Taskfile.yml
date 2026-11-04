@@ -56,7 +56,7 @@ tasks:
     generates:
       - frontend/bindings/**/*
     cmds:
-      - wails3 generate bindings -clean=true -ts -i
+      - node scripts/wails.mjs generate bindings -clean=true -ts -i
 
   generate:icons:
     summary: 由 appicon.png 生成各平台图标
@@ -69,7 +69,7 @@ tasks:
       - 'darwin/icons.icns'
       - 'windows/icon.ico'
     cmds:
-      - wails3 generate icons -input appicon.png -macfilename darwin/icons.icns -windowsfilename windows/icon.ico -iconcomposerinput appicon.icon -macassetdir darwin
+      - node ../scripts/wails.mjs generate icons -input appicon.png -macfilename darwin/icons.icns -windowsfilename windows/icon.ico -iconcomposerinput appicon.icon -macassetdir darwin
 
   dev:frontend:
     summary: 启动前端开发服务器（wails3 dev 以 background 方式调用）
@@ -87,4 +87,4 @@ tasks:
     summary: 依据 config.yml 重新生成平台资源（会覆盖手工修改）
     dir: build
     cmds:
-      - wails3 update build-assets -name "{{.APP_NAME}}" -binaryname "{{.APP_NAME}}" -config config.yml -dir .
+      - node ../scripts/wails.mjs update build-assets -name "{{.APP_NAME}}" -binaryname "{{.APP_NAME}}" -config config.yml -dir .

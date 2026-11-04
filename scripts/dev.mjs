@@ -1,12 +1,19 @@
 #!/usr/bin/env node
-// 开发模式入口：挑选空闲端口 → 启动 wails3 dev → 退出时清理子进程。
+// 开发模式入口：校验 CLI 版本 → 挑选空闲端口 → 启动 wails3 dev → 退出时清理子进程。
 import { spawn } from 'node:child_process'
 import net from 'node:net'
 import process from 'node:process'
+import { abortWith, ensureWailsCli } from './lib/wails.mjs'
 
 const PORT_START = Number(process.env.WAILS_DEV_PORT ?? 9245)
 const PORT_END = PORT_START + 20
-const WAILS_BIN = process.env.WAILS3_BIN ?? 'wails3'
+
+let cli
+try {
+  cli = ensureWailsCli()
+} catch (error) {
+  abortWith(error.message)
+}
 
 function isPortFree(port) {
   return new Promise((resolve) => {
@@ -27,9 +34,9 @@ async function pickPort() {
 }
 
 const port = await pickPort()
-console.log(`[dev] 使用端口 ${port}，执行 ${WAILS_BIN} dev`)
+console.log(`[dev] 使用 ${cli.bin}（${cli.version}），端口 ${port}`)
 
-const child = spawn(WAILS_BIN, ['dev', '-config', './build/config.yml', '-port', String(port)], {
+const child = spawn(cli.bin, ['dev', '-config', './build/config.yml', '-port', String(port)], {
   stdio: 'inherit',
   env: { ...process.env, WAILS_VITE_PORT: String(port) },
 })
