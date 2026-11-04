@@ -24,6 +24,28 @@ const (
 	allFilesPattern = "*.*"
 )
 
+// 原生对话框的自定义文案集中在这里。
+// 说明：Cancel / Where / Tags 这类系统级按钮来自 AppKit，不受这些参数控制，
+// 只能靠应用包声明 zh-Hans 本地化（build/darwin/Info.plist 与 *.lproj）来中文化。
+const (
+	dialogPickFilesTitle   = "选择文件（可多选）"
+	dialogPickFilesMessage = "可一次选择多个文件，支持文本、代码与图片"
+	dialogPickFilesButton  = "选择"
+
+	dialogPickDirectoryTitle   = "选择目录"
+	dialogPickDirectoryMessage = "选择一个文件夹作为操作目标"
+	dialogPickDirectoryButton  = "选择"
+
+	dialogSaveFileTitle   = "保存示例文件"
+	dialogSaveFileMessage = "将写入一段由系统能力页生成的示例文本"
+	dialogSaveFileButton  = "保存"
+
+	filterTextAndCode = "文本与代码"
+	filterImages      = "图片"
+	filterAllFiles    = "所有文件"
+	filterTextFile    = "文本文件"
+)
+
 // CapabilitiesService 把系统能力收敛为一个个可演示、可回显的受控接口：
 // 文件对话框、系统通知、剪贴板、外部链接、窗口控制与系统信息。
 type CapabilitiesService struct {
@@ -61,10 +83,12 @@ func (s *CapabilitiesService) ServiceName() string {
 // 用户取消对话框时返回 Canceled=true 且不返回错误，前端据此展示「已取消」。
 func (s *CapabilitiesService) PickFiles() (contract.SelectedFiles, error) {
 	dialog := s.app.Dialog.OpenFile()
-	dialog.SetTitle("选择文件（可多选）")
-	dialog.AddFilter("文本与代码", "*.txt;*.md;*.json;*.go;*.ts;*.vue")
-	dialog.AddFilter("图片", "*.png;*.jpg;*.jpeg")
-	dialog.AddFilter("所有文件", allFilesPattern)
+	dialog.SetTitle(dialogPickFilesTitle)
+	dialog.SetMessage(dialogPickFilesMessage)
+	dialog.SetButtonText(dialogPickFilesButton)
+	dialog.AddFilter(filterTextAndCode, "*.txt;*.md;*.json;*.go;*.ts;*.vue")
+	dialog.AddFilter(filterImages, "*.png;*.jpg;*.jpeg")
+	dialog.AddFilter(filterAllFiles, allFilesPattern)
 	paths, err := dialog.PromptForMultipleSelection()
 	if err != nil {
 		return contract.SelectedFiles{}, fmt.Errorf("打开文件对话框失败: %w", err)
@@ -78,7 +102,9 @@ func (s *CapabilitiesService) PickFiles() (contract.SelectedFiles, error) {
 // PickDirectory 打开系统目录选择对话框；取消与失败同样分开返回。
 func (s *CapabilitiesService) PickDirectory() (contract.SelectedDirectory, error) {
 	dialog := s.app.Dialog.OpenFile()
-	dialog.SetTitle("选择目录")
+	dialog.SetTitle(dialogPickDirectoryTitle)
+	dialog.SetMessage(dialogPickDirectoryMessage)
+	dialog.SetButtonText(dialogPickDirectoryButton)
 	dialog.CanChooseFiles(false)
 	dialog.CanChooseDirectories(true)
 	dialog.CanCreateDirectories(true)
@@ -96,9 +122,11 @@ func (s *CapabilitiesService) PickDirectory() (contract.SelectedDirectory, error
 func (s *CapabilitiesService) SaveDemoFile() (contract.SavedFile, error) {
 	// 保存对话框没有 SetTitle 方法，标题与过滤器通过 Options 传入。
 	dialog := s.app.Dialog.SaveFileWithOptions(&application.SaveFileDialogOptions{
-		Title:    "保存示例文件",
-		Filename: demoFileName,
-		Filters:  []application.FileFilter{{DisplayName: "文本文件", Pattern: "*.txt"}},
+		Title:      dialogSaveFileTitle,
+		Message:    dialogSaveFileMessage,
+		ButtonText: dialogSaveFileButton,
+		Filename:   demoFileName,
+		Filters:    []application.FileFilter{{DisplayName: filterTextFile, Pattern: "*.txt"}},
 	})
 	path, err := dialog.PromptForSingleSelection()
 	if err != nil {
