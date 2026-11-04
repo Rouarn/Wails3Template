@@ -110,7 +110,9 @@ body {
   color: var(--text-strong);
 }
 
-.nav-item.router-link-active {
+/* 激活态只由 useRoute().path 派生（.nav-item--active），不再依赖 router-link-active，
+   否则嵌套路由下父级 "/" 会与 "/settings" 同时命中。 */
+.nav-item--active {
   background: rgba(99, 102, 241, 0.14);
   color: #6366f1;
   font-weight: 600;

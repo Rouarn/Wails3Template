@@ -1,23 +1,29 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 
+import brandStar from '../assets/brand-star.svg'
 import { useAppStore } from '../stores/app'
 
 const { t } = useI18n()
+const route = useRoute()
 const store = useAppStore()
 
 const navItems = [
   { name: 'home', to: '/', label: 'nav.home', icon: 'i-lucide-house' },
   { name: 'settings', to: '/settings', label: 'nav.settings', icon: 'i-lucide-settings' },
 ] as const
+
+// 激活项唯一来源：当前路由路径与菜单目标精确相等。
+const isActive = (to: string) => route.path === to
 </script>
 
 <template>
   <div class="app-shell">
     <aside class="app-sidebar">
       <div class="mb-6 flex items-center gap-3 px-2">
-        <div class="h-9 w-9 flex items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400">
-          <span class="i-lucide-layers text-xl" aria-hidden="true" />
+        <div class="h-9 w-9 flex items-center justify-center rounded-xl bg-white/70">
+          <img :src="brandStar" class="h-6 w-6" alt="" aria-hidden="true" />
         </div>
         <div>
           <p class="text-sm font-600 leading-tight">Wails v3 模板</p>
@@ -26,7 +32,13 @@ const navItems = [
       </div>
 
       <nav class="app-sidebar__nav flex flex-col gap-1">
-        <router-link v-for="item in navItems" :key="item.name" :to="item.to" class="nav-item">
+        <router-link
+          v-for="item in navItems"
+          :key="item.name"
+          :to="item.to"
+          class="nav-item"
+          :class="{ 'nav-item--active': isActive(item.to) }"
+        >
           <span :class="item.icon" class="text-lg" aria-hidden="true" />
           <span>{{ t(item.label) }}</span>
         </router-link>
