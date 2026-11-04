@@ -1,7 +1,7 @@
-# Feel free to remove those if you don't want/need to use them.
-# Make sure to check the documentation at https://nfpm.goreleaser.com
+# 如不需要以下配置可自行删除。
+# 文档见 https://nfpm.goreleaser.com
 #
-# The lines below are called `modelines`. See `:help modeline`
+# 下面几行是 Vim 的 `modelines`，见 `:help modeline`
 
 name: "Wails3Template"
 arch: ${GOARCH}
@@ -24,34 +24,34 @@ contents:
   - src: "./build/linux/Wails3Template.desktop"
     dst: "/usr/share/applications/Wails3Template.desktop"
 
-# Default dependencies for the GTK4 + WebKitGTK 6.0 stack (Ubuntu 24.04+ / Debian 13+)
+# GTK4 + WebKitGTK 6.0 的默认依赖（Ubuntu 24.04+ / Debian 13+）
 depends:
   - libgtk-4-1
   - libwebkitgtk-6.0-4
 
-# Distribution-specific overrides for different package formats
+# 按发行版覆盖不同包格式的配置
 overrides:
-  # RPM packages for Fedora / RHEL / AlmaLinux / Rocky Linux
+  # Fedora / RHEL / AlmaLinux / Rocky Linux 的 RPM 包
   rpm:
     depends:
       - gtk4
       - webkitgtk6.0
 
-  # Arch Linux packages
+  # Arch Linux 包
   archlinux:
     depends:
       - gtk4
       - webkitgtk-6.0
 
-# scripts section to ensure desktop database is updated after install
+# scripts 段用于安装后刷新 desktop 数据库
 scripts:
   postinstall: "./build/linux/nfpm/scripts/postinstall.sh"
-  # You can also add preremove, postremove if needed
+  # 如需要也可补充 preremove、postremove
   # preremove: "./build/linux/nfpm/scripts/preremove.sh"
   # postremove: "./build/linux/nfpm/scripts/postremove.sh"
 
-# If you build your app with -tags gtk3 (legacy WebKit2GTK 4.1 stack — supported through v3.0.x, removed in v3.1),
-# replace the depends/overrides above with these:
+# 若使用 -tags gtk3 构建（旧版 WebKit2GTK 4.1 栈，v3.0.x 可用，v3.1 已移除），
+# 请把上面的 depends/overrides 替换为：
 #
 # depends:
 #   - libgtk-3-0

@@ -4,16 +4,15 @@ includes:
   common: ../Taskfile.yml
 
 vars:
-  # Docker image for cross-compilation (used when building on non-macOS)
+  # 交叉编译所用的 Docker 镜像（在非 macOS 主机上构建时启用）
   CROSS_IMAGE: wails-cross
 
 tasks:
   build:
-    summary: Builds the application
+    summary: 构建应用
     cmds:
-      # The experimental CGO-free backend (-tags purego, or WAILS_PUREGO=1) needs
-      # no C toolchain, so it builds natively on every host; cgo builds
-      # cross-compile through Docker.
+      # 实验性的无 CGO 后端（-tags purego 或 WAILS_PUREGO=1）不需要 C 工具链，
+      # 因此可在任意主机本地编译；启用 cgo 时则通过 Docker 交叉编译。
       - task: '{{if or (eq OS "darwin") (has "purego" (splitList "," (.EXTRA_TAGS | default "")))}}build:native{{else}}build:docker{{end}}'
         vars:
           ARCH: '{{.ARCH}}'
@@ -27,7 +26,7 @@ tasks:
       OUTPUT: '{{ .OUTPUT | default .DEFAULT_OUTPUT }}'
 
   build:native:
-    summary: Builds the application natively (on macOS, or anywhere with -tags purego)
+    summary: 本地构建应用（macOS，或任意带 -tags purego 的主机）
     internal: true
     deps:
       - task: common:go:mod:tidy
@@ -42,7 +41,7 @@ tasks:
       - task: common:generate:icons
     preconditions:
       - sh: '{{if eq .OBFUSCATED "true"}}command -v garble >/dev/null 2>&1{{else}}true{{end}}'
-        msg: 'garble is required for obfuscated builds. Install it with: go install mvdan.cc/garble@v0.16.0 (requires Go 1.24+). See https://github.com/burrowers/garble/releases for version/toolchain compatibility.'
+        msg: '混淆构建需要 garble。安装命令：go install mvdan.cc/garble@v0.16.0（要求 Go 1.24+）。版本与工具链兼容性见 https://github.com/burrowers/garble/releases。'
     cmds:
       - wails3 tool prepare-macos-output --dir "{{.BIN_DIR}}"
       - '{{if eq .OBFUSCATED "true"}}garble {{.GARBLE_ARGS}} build{{else}}go build{{end}} {{.BUILD_FLAGS}} -o "{{.OUTPUT}}"'
@@ -59,7 +58,7 @@ tasks:
       MACOSX_DEPLOYMENT_TARGET: '12.0'
 
   build:docker:
-    summary: Cross-compiles for macOS using Docker (for Linux/Windows hosts)
+    summary: 使用 Docker 交叉编译 macOS 产物（用于 Linux/Windows 主机）
     internal: true
     deps:
       - task: common:build:frontend
@@ -69,11 +68,11 @@ tasks:
       - task: common:generate:icons
     preconditions:
       - sh: docker info > /dev/null 2>&1
-        msg: 'Docker is required for cross-compilation. Please install Docker.'
+        msg: '交叉编译需要 Docker，请先安装 Docker。'
       - sh: docker image inspect {{.CROSS_IMAGE}} > /dev/null 2>&1
         msg: |
-          Docker image '{{.CROSS_IMAGE}}' not found.
-          Build it first: wails3 task setup:docker
+          未找到 Docker 镜像 '{{.CROSS_IMAGE}}'。
+          请先执行：wails3 task setup:docker
     cmds:
       - docker run --rm -v "{{.ROOT_DIR}}:/app" {{.DOCKER_MOUNTS}} -e APP_NAME="{{.APP_NAME}}" {{if .EXTRA_TAGS}}-e EXTRA_TAGS="{{.EXTRA_TAGS}}"{{end}} {{if eq .OBFUSCATED "true"}}-e OBFUSCATED=true{{end}} {{if .GARBLE_ARGS}}-e GARBLE_ARGS="{{.GARBLE_ARGS}}"{{end}} {{.CROSS_IMAGE}} darwin {{.DOCKER_ARCH}}
       - cmd: docker run --rm -v "{{.ROOT_DIR}}:/app" alpine chown -R $(id -u):$(id -g) /app/bin
@@ -84,13 +83,13 @@ tasks:
       DOCKER_ARCH: '{{if eq .ARCH "arm64"}}arm64{{else if eq .ARCH "amd64"}}amd64{{else}}arm64{{end}}'
       DEFAULT_OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}'
       OUTPUT: '{{ .OUTPUT | default .DEFAULT_OUTPUT }}'
-      # Generate Docker volume mounts: Go module cache + go.mod replace directives
-      # Uses wails3 tool docker-mounts for cross-platform compatibility (Windows/Linux/macOS)
+      # 生成 Docker 卷挂载：Go 模块缓存 + go.mod 中的 replace 指令
+      # 通过 wails3 tool docker-mounts 生成，兼容 Windows/Linux/macOS
       DOCKER_MOUNTS:
         sh: 'wails3 tool docker-mounts'
 
   build:universal:
-    summary: Builds darwin universal binary (arm64 + amd64)
+    summary: 构建 macOS 通用二进制（arm64 + amd64）
     deps:
       - task: build
         vars:
@@ -104,42 +103,42 @@ tasks:
       - task: '{{if eq OS "darwin"}}build:universal:lipo:native{{else}}build:universal:lipo:go{{end}}'
 
   build:universal:lipo:native:
-    summary: Creates universal binary using native lipo (macOS)
+    summary: 使用原生 lipo 生成通用二进制（macOS）
     internal: true
     cmds:
       - lipo -create -output "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
       - rm "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
 
   build:universal:lipo:go:
-    summary: Creates universal binary using wails3 tool lipo (Linux/Windows)
+    summary: 使用 wails3 tool lipo 生成通用二进制（Linux/Windows）
     internal: true
     cmds:
       - wails3 tool lipo -output "{{.BIN_DIR}}/{{.APP_NAME}}" -input "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" -input "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
       - rm -f "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
 
   package:
-    summary: Packages the application into a `.app` bundle
+    summary: 把应用打包成 `.app` 应用包
     deps:
       - task: build
     cmds:
       - task: create:app:bundle
 
   package:universal:
-    summary: Packages darwin universal binary (arm64 + amd64)
+    summary: 打包 macOS 通用二进制（arm64 + amd64）
     deps:
       - task: build:universal
     cmds:
       - task: create:app:bundle
 
   package:dmg:
-    summary: Packages the application into a styled `.dmg`
+    summary: 把应用打包成带样式的 `.dmg` 安装包
     deps:
       - task: package
     cmds:
       - task: create:dmg
 
   create:dmg:
-    summary: Creates a configurable `.dmg` from the `.app` bundle
+    summary: 基于 `.app` 应用包生成可配置的 `.dmg`
     platforms: [darwin]
     cmds:
       - >-
@@ -159,10 +158,10 @@ tasks:
       DMG_FILES: '{{.DMG_FILES | default ""}}'
 
   create:app:bundle:
-    summary: Creates an `.app` bundle
+    summary: 生成 `.app` 应用包
     cmds:
-      # A reused bundle can acquire Finder metadata in synced folders. Build a
-      # fresh bundle so codesign never has to replace a contaminated signature.
+      # 复用的应用包可能在同步目录里被 Finder 写入元数据。这里每次重建，
+      # 避免 codesign 需要覆盖已被污染的签名。
       - test -n "{{.BIN_DIR}}" && test -n "{{.APP_NAME}}" && rm -rf -- "{{.BIN_DIR}}/{{.APP_NAME}}.app"
       - mkdir -p "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS"
       - mkdir -p "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources"
@@ -176,7 +175,7 @@ tasks:
       - task: '{{if eq OS "darwin"}}codesign:adhoc{{else}}codesign:skip{{end}}'
 
   codesign:adhoc:
-    summary: Ad-hoc signs the app bundle (macOS only)
+    summary: 对应用包做 ad-hoc 签名（仅 macOS）
     internal: true
     cmds:
       - xattr -cr "{{.BIN_DIR}}/{{.APP_NAME}}.app"
@@ -184,10 +183,10 @@ tasks:
       - codesign --verify --deep --strict "{{.BIN_DIR}}/{{.APP_NAME}}.app"
 
   codesign:skip:
-    summary: Skips codesigning when cross-compiling
+    summary: 交叉编译时跳过签名
     internal: true
     cmds:
-      - 'echo "Skipping codesign (not available on {{OS}}). Sign the .app on macOS before distribution."'
+      - 'echo "已跳过 codesign（当前平台 {{OS}} 不可用）。分发前请在 macOS 上对 .app 签名。"'
 
   run:
     cmds:
@@ -208,23 +207,23 @@ tasks:
       - '"{{.BIN_DIR}}/{{.APP_NAME}}.dev.app/Contents/MacOS/{{.APP_NAME}}"'
 
   sign:
-    summary: Signs the application bundle with Developer ID
+    summary: 使用 Developer ID 签名应用包
     desc: |
-      Signs the .app bundle for distribution.
-      Uses signing identity from `wails3 setup` (stored in ~/.config/wails/defaults.yaml).
-      Override with: task darwin:sign -- --identity "Developer ID Application: ..."
+      为分发签名 .app 应用包。
+      签名身份取自 `wails3 setup`（保存在 ~/.config/wails/defaults.yaml）。
+      可通过以下方式覆盖：task darwin:sign -- --identity "Developer ID Application: ..."
     deps:
       - task: package
     cmds:
       - wails3 tool sign --input "{{.BIN_DIR}}/{{.APP_NAME}}.app" {{.CLI_ARGS}}
 
   sign:notarize:
-    summary: Signs and notarizes the application bundle
+    summary: 签名并公证应用包
     desc: |
-      Signs the .app bundle and submits it for notarization.
-      Uses signing identity and keychain profile from `wails3 setup`.
+      签名 .app 应用包并提交公证。
+      签名身份与钥匙串配置取自 `wails3 setup`。
 
-      First-time setup:
+      首次配置：
         wails3 setup
     deps:
       - task: package

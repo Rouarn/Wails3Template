@@ -15,9 +15,9 @@ type Dirs struct {
 }
 
 // NewDirs 按操作系统约定返回配置与日志目录：
-// macOS: ~/Library/Application Support/<AppName>
-// Linux: $XDG_CONFIG_HOME/<AppName>（默认 ~/.config）
-// Windows: %AppData%\<AppName>
+// macOS：~/Library/Application Support/<AppName>
+// Linux：$XDG_CONFIG_HOME/<AppName>（默认 ~/.config）
+// Windows：%AppData%\<AppName>
 func NewDirs(appName string) (Dirs, error) {
 	if appName == "" {
 		return Dirs{}, fmt.Errorf("应用名不能为空")

@@ -4,21 +4,21 @@ includes:
   common: ../Taskfile.yml
 
 vars:
-  # Signing configuration - edit these values for your project
+  # 签名配置：按项目实际情况填写
   # SIGN_CERTIFICATE: "path/to/certificate.pfx"
-  # SIGN_THUMBPRINT: "certificate-thumbprint"  # Alternative to SIGN_CERTIFICATE
+  # SIGN_THUMBPRINT: "certificate-thumbprint"  # SIGN_CERTIFICATE 的替代方式
   # TIMESTAMP_SERVER: "http://timestamp.digicert.com"
   #
-  # Password is stored securely in system keychain. Run: wails3 setup signing
+  # 密码保存在系统钥匙串中。先执行：wails3 setup signing
 
-  # Docker image for cross-compilation with CGO (used when CGO_ENABLED=1 on non-Windows)
+  # 启用 CGO 交叉编译所用的 Docker 镜像（在非 Windows 主机且 CGO_ENABLED=1 时启用）
   CROSS_IMAGE: wails-cross
 
 tasks:
   build:
-    summary: Builds the application for Windows
+    summary: 构建 Windows 应用
     cmds:
-      # Auto-detect CGO: if CGO_ENABLED=1, use Docker; otherwise use native Go cross-compile
+      # 自动判断 CGO：CGO_ENABLED=1 时走 Docker，否则用 Go 原生交叉编译
       - task: '{{if and (ne OS "windows") (eq .CGO_ENABLED "1")}}build:docker{{else}}build:native{{end}}'
         vars:
           ARCH: '{{.ARCH}}'
@@ -27,11 +27,11 @@ tasks:
           OBFUSCATED: '{{.OBFUSCATED}}'
           GARBLE_ARGS: '{{.GARBLE_ARGS}}'
     vars:
-      # Default to CGO_ENABLED=0 if not explicitly set
+      # 未显式设置时默认 CGO_ENABLED=0
       CGO_ENABLED: '{{.CGO_ENABLED | default "0"}}'
 
   build:native:
-    summary: Builds the application using native Go cross-compilation
+    summary: 使用 Go 原生交叉编译构建应用
     internal: true
     deps:
       - task: common:go:mod:tidy
@@ -46,7 +46,7 @@ tasks:
       - task: common:generate:icons
     preconditions:
       - sh: '{{if eq .OBFUSCATED "true"}}command -v garble >/dev/null 2>&1{{else}}true{{end}}'
-        msg: 'garble is required for obfuscated builds. Install it with: go install mvdan.cc/garble@v0.16.0 (requires Go 1.24+). See https://github.com/burrowers/garble/releases for version/toolchain compatibility.'
+        msg: '混淆构建需要 garble。安装命令：go install mvdan.cc/garble@v0.16.0（要求 Go 1.24+）。版本与工具链兼容性见 https://github.com/burrowers/garble/releases。'
     cmds:
       - task: generate:syso
         vars:
@@ -64,7 +64,7 @@ tasks:
       GOARCH: '{{.ARCH | default ARCH}}'
 
   build:docker:
-    summary: Cross-compiles for Windows using Docker with Zig (for CGO builds on non-Windows)
+    summary: 使用带 Zig 的 Docker 交叉编译 Windows 产物（用于非 Windows 主机上的 CGO 构建）
     internal: true
     deps:
       - task: common:build:frontend
@@ -74,11 +74,11 @@ tasks:
       - task: common:generate:icons
     preconditions:
       - sh: docker info > /dev/null 2>&1
-        msg: 'Docker is required for CGO cross-compilation. Please install Docker.'
+        msg: 'CGO 交叉编译需要 Docker，请先安装 Docker。'
       - sh: docker image inspect {{.CROSS_IMAGE}} > /dev/null 2>&1
         msg: |
-          Docker image '{{.CROSS_IMAGE}}' not found.
-          Build it first: wails3 task setup:docker
+          未找到 Docker 镜像 '{{.CROSS_IMAGE}}'。
+          请先执行：wails3 task setup:docker
     cmds:
       - task: generate:syso
         vars:
@@ -89,13 +89,13 @@ tasks:
       - rm -f *.syso
     vars:
       DOCKER_ARCH: '{{.ARCH | default "amd64"}}'
-      # Generate Docker volume mounts: Go module cache + go.mod replace directives
-      # Uses wails3 tool docker-mounts for cross-platform compatibility (Windows/Linux/macOS)
+      # 生成 Docker 卷挂载：Go 模块缓存 + go.mod 中的 replace 指令
+      # 通过 wails3 tool docker-mounts 生成，兼容 Windows/Linux/macOS
       DOCKER_MOUNTS:
         sh: 'wails3 tool docker-mounts'
 
   package:
-    summary: Packages the application
+    summary: 打包应用
     cmds:
       - task: '{{if eq (.FORMAT | default "nsis") "msix"}}create:msix:package{{else}}create:nsis:installer{{end}}'
         vars:
@@ -105,7 +105,7 @@ tasks:
       INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
 
   generate:syso:
-    summary: Generates Windows `.syso` file
+    summary: 生成 Windows `.syso` 资源文件
     dir: build
     cmds:
       - wails3 generate syso -arch {{.ARCH}} -icon windows/icon.ico -manifest windows/wails.exe.manifest -info windows/info.json -out ../wails_windows_{{.ARCH}}.syso
@@ -113,15 +113,15 @@ tasks:
       ARCH: '{{.ARCH | default ARCH}}'
 
   create:nsis:installer:
-    summary: Creates an NSIS installer
+    summary: 生成 NSIS 安装程序
     dir: build/windows/nsis
     deps:
       - task: build
     preconditions:
       - sh: '[ "{{.INSTALL_SCOPE}}" = "user" ] || [ "{{.INSTALL_SCOPE}}" = "machine" ]'
-        msg: "INSTALL_SCOPE must be 'user' or 'machine', got '{{.INSTALL_SCOPE}}'"
+        msg: "INSTALL_SCOPE 只能是 'user' 或 'machine'，当前值为 '{{.INSTALL_SCOPE}}'"
     cmds:
-      # Create the Microsoft WebView2 bootstrapper if it doesn't exist
+      # 若不存在则生成 Microsoft WebView2 引导安装程序
       - wails3 generate webview2bootstrapper -dir "{{.ROOT_DIR}}/build/windows/nsis"
       - |
         {{if eq OS "windows"}}
@@ -135,7 +135,7 @@ tasks:
       INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
 
   create:msix:package:
-    summary: Creates an MSIX package
+    summary: 生成 MSIX 安装包
     deps:
       - task: build
     cmds:
@@ -156,7 +156,7 @@ tasks:
       USE_MSIX_TOOL: '{{.USE_MSIX_TOOL | default "false"}}'
 
   install:msix:tools:
-    summary: Installs tools required for MSIX packaging
+    summary: 安装 MSIX 打包所需工具
     cmds:
       - wails3 tool msix-install-tools
 
@@ -165,26 +165,26 @@ tasks:
       - '{{.BIN_DIR}}/{{.APP_NAME}}.exe'
 
   sign:
-    summary: Signs the Windows executable
+    summary: 签名 Windows 可执行文件
     desc: |
-      Signs the .exe with an Authenticode certificate.
-      Set SIGN_CERTIFICATE or SIGN_THUMBPRINT to override the certificate
-      configured globally via `wails3 setup` (~/.config/wails/defaults.yaml).
-      Password is retrieved from system keychain (run: wails3 setup signing)
+      使用 Authenticode 证书签名 .exe。
+      可设置 SIGN_CERTIFICATE 或 SIGN_THUMBPRINT，覆盖通过 `wails3 setup`
+      全局配置的证书（~/.config/wails/defaults.yaml）。
+      密码从系统钥匙串读取（先执行：wails3 setup signing）
     deps:
       - task: build
     cmds:
-      # Certificate vars are optional: if unset, `wails3 tool sign` falls back to
-      # the certificate configured globally via `wails3 setup`.
+      # 证书变量可选：未设置时 `wails3 tool sign` 会回退到
+      # 通过 `wails3 setup` 配置的全局证书。
       - wails3 tool sign --input "{{.BIN_DIR}}/{{.APP_NAME}}.exe" {{if .SIGN_CERTIFICATE}}--certificate "{{.SIGN_CERTIFICATE}}"{{end}} {{if .SIGN_THUMBPRINT}}--thumbprint "{{.SIGN_THUMBPRINT}}"{{end}} {{if .TIMESTAMP_SERVER}}--timestamp "{{.TIMESTAMP_SERVER}}"{{end}}
 
   sign:installer:
-    summary: Signs the NSIS installer
+    summary: 签名 NSIS 安装程序
     desc: |
-      Creates and signs the NSIS installer.
-      Set SIGN_CERTIFICATE or SIGN_THUMBPRINT to override the certificate
-      configured globally via `wails3 setup` (~/.config/wails/defaults.yaml).
-      Password is retrieved from system keychain (run: wails3 setup signing)
+      生成并签名 NSIS 安装程序。
+      可设置 SIGN_CERTIFICATE 或 SIGN_THUMBPRINT，覆盖通过 `wails3 setup`
+      全局配置的证书（~/.config/wails/defaults.yaml）。
+      密码从系统钥匙串读取（先执行：wails3 setup signing）
     deps:
       - task: create:nsis:installer
         vars:
