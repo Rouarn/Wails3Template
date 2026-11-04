@@ -48,10 +48,10 @@ jobs:
 
       - name: 安装 NSIS（Windows）
         if: runner.os == 'Windows'
-        shell: pwsh
+        shell: bash
         run: |
           choco install nsis -y --no-progress
-          "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Append
+          echo "C:\Program Files (x86)\NSIS" >> "$GITHUB_PATH"
 
       - name: 安装 Wails CLI 与 Task
         shell: bash
@@ -67,10 +67,13 @@ jobs:
       - name: 安装前端依赖
         run: pnpm install --frozen-lockfile
 
-      - name: 契约漂移检测
-        run: |
-          pnpm check:bindings
-          git diff --exit-code -- frontend/bindings
+      # 拆成两个 step：pwsh 下多行 run 不会因中间命令非零而中断，
+      # 旧写法会让 check:bindings 的失败被最后一条 git diff 的退出码覆盖（假绿）。
+      - name: 契约漂移检测（重新生成）
+        run: pnpm check:bindings
+
+      - name: 契约漂移检测（确认无差异）
+        run: git diff --exit-code -- frontend/bindings
 
       - name: 前端门禁
         run: pnpm check:fe

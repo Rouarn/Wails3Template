@@ -1,0 +1,23 @@
+# 统一按 LF 入库与检出。Windows runner 默认 core.autocrlf=true，会把工作副本写成 CRLF，
+# 导致 vp fmt --check 全量报错、wails3 生成的 bindings 出现假的漂移差异。
+* text=auto eol=lf
+
+# 二进制文件不做行尾归一，也不参与文本 diff
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.icns binary
+*.woff2 binary
+*.ttf binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.zip binary
+*.7z binary
+*.dmg binary
+*.pfx binary
+*.p12 binary
