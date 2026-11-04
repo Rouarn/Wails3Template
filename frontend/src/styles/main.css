@@ -341,29 +341,54 @@ body {
 
 /* ---------- 系统能力页 ---------- */
 
+/* 这里刻意不用 flex 容器包住多列：实测 WebKit 在 flex 列容器里的多列会退化成
+   「第一列填满可视高度、剩余进第二列」，右侧留出大块空白。改为普通块级容器后，
+   浏览器才会按内容高度均分两列。 */
 .capabilities-page {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
   width: 100%;
   max-width: 1120px;
 }
 
+/* 瀑布流：CSS 多列让每张卡片按自身高度紧贴上一张，
+   避免两列等高网格把矮卡片下方撑出大片空白。
+   卡片内容是动态展开/收起的（文件结果、通知回执），多列由浏览器自动重排，
+   不需要 JS 预先算列高，也就不会在内容变化后错位。
+   代价是阅读顺序为「先左列自上而下，再右列」，这里每张卡片都是独立能力演示，
+   没有跨卡片的阅读依赖，因此可以接受。 */
 .cap-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
-  gap: 16px;
-  align-items: start;
+  columns: 2;
+  column-gap: 16px;
+  /* 显式声明按内容高度均分，避免浏览器按「填满首列」策略切分。 */
+  column-fill: balance;
+  margin-top: 18px;
 }
 
 .cap-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  /* 多列布局里用 inline-block 而不是 flex：WebKit 对「可跨列 flex 容器」的分列
+     计算不可靠（实测会把 6 张卡全塞进左列、右列只剩 2 张，留下大片空白）。
+     inline-block 卡片是多列里的原子片段，不会被拆开，分列高度也按实际内容均分。 */
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  vertical-align: top;
   padding: 16px;
   border: 1px solid var(--border-color);
   border-radius: 14px;
   background: var(--panel-bg);
+  /* 卡片不允许被拆到两列，整张作为一个多列片段。 */
+  break-inside: avoid;
+  /* 多列布局没有 row-gap，用下外边距承担卡片之间的纵向间距。 */
+  margin-bottom: 16px;
+}
+
+/* 窄窗口退化为单列，避免两列被挤到不可读的宽度。
+   窗口最小宽度是 900，而 WebView 的实际视口比窗口窄约 22px（约 878），
+   980 窗口时正文区只剩约 700，两列每列约 334 会把按钮和表格标签挤成多行，
+   因此把断点放在 1024：低于它一律单列。 */
+@media (max-width: 1024px) {
+  .cap-grid {
+    columns: 1;
+  }
 }
 
 .cap-card__head {
@@ -403,6 +428,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* 卡片不再是 flex 容器，卡片头部与内容之间用外边距保持 12px 间距。 */
+  margin-top: 12px;
 }
 
 .cap-actions {
