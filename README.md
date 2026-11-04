@@ -63,7 +63,7 @@ pnpm check:bindings   # 重新生成 bindings 并校验仓库产物无漂移
 pnpm check:icons      # 校验图标类名在 iconify 集合里存在、且产物 CSS 里真有对应规则
 ```
 
-首次运行前先执行 `pnpm install`；`go build ./...` 依赖 `frontend/dist`（`go:embed`），因此完整构建请走 `pnpm build`，或先执行 `pnpm build:frontend`。
+首次运行前先执行 `pnpm install`；`go build ./...` 依赖 `packages/frontend/dist`（`go:embed`），因此完整构建请走 `pnpm build`，或先执行 `pnpm build:frontend`。
 
 ## 目录
 
@@ -76,7 +76,7 @@ pnpm check:icons      # 校验图标类名在 iconify 集合里存在、且产�
 │   ├── contract/           # 单一契约来源：模型、事件、结构化错误
 │   ├── infra/              # 基础设施：日志、设置存储、路径校验
 │   └── platform/           # 平台差异：配置与日志目录
-├── frontend/
+├── packages/frontend/
 │   ├── src/bridge/         # 唯一接触 bindings 的层：调用封装、事件订阅、错误归一化
 │   ├── src/views/          # 首页 / 设置 / 404
 │   ├── src/layouts/        # 双轨外壳（侧栏 + 主区）与单栏外壳
@@ -87,9 +87,9 @@ pnpm check:icons      # 校验图标类名在 iconify 集合里存在、且产�
 
 ## 架构约定
 
-- **契约单一来源**：Go 的 `internal/contract` 是唯一模型来源；前端类型全部来自生成的 `frontend/bindings`，不手写 DTO。
-- **生成产物入库**：`frontend/bindings` 提交到仓库；改 Go 服务后执行 `wails3 generate bindings -clean=true -ts -i` 并提交。本地用 `pnpm check:bindings` 防漂移，CI 也会在 `frontend/bindings` 上执行 `git diff --exit-code`（推送/PR 的 `ci.yml` 单 runner 执行）。
-- **图标单一来源**：所有图标类名集中在 `frontend/src/icons.ts` 的 `APP_ICONS`；UnoCSS 的 `safelist` 由该表生成，`scripts/check-icons.mjs` 在构建期校验「集合里存在 + 产物 CSS 里有规则」，动态拼接类名直接报错。
+- **契约单一来源**：Go 的 `internal/contract` 是唯一模型来源；前端类型全部来自生成的 `packages/frontend/bindings`，不手写 DTO。
+- **生成产物入库**：`packages/frontend/bindings` 提交到仓库；改 Go 服务后执行 `wails3 generate bindings -clean=true -ts -i` 并提交。本地用 `pnpm check:bindings` 防漂移，CI 也会在 `packages/frontend/bindings` 上执行 `git diff --exit-code`（推送/PR 的 `ci.yml` 单 runner 执行）。
+- **图标单一来源**：所有图标类名集中在 `packages/frontend/src/icons.ts` 的 `APP_ICONS`；UnoCSS 的 `safelist` 由该表生成，`scripts/check-icons.mjs` 在构建期校验「集合里存在 + 产物 CSS 里有规则」，动态拼接类名直接报错。
 - **错误回传**：Go 侧统一返回 `*contract.AppError`，经 `application.Options.MarshalError` 序列化为 `{code,message,details}`；前端 `src/bridge/errors.ts` 归一化并附加 15s 超时与取消。
 - **事件**：`app.clock` 每秒推送时间与运行时长，`app.status` 在启动完成/设置保存时推送，`app.task.progress` 推送可取消任务的进度，`app.navigate` 让托盘「设置」把前端跳到 `/settings`；前端只在 `src/bridge/events.ts` 订阅。
 - **桌面行为**：关窗只收进托盘，托盘菜单为「显示主窗口 / 设置 / 退出」，只有点「退出」才结束进程；窗口位置、尺寸与最大化状态写入同一 `settings.json` 的 `window` 字段，启动时若窗口中心已不在任何显示器工作区（拔掉外接屏/改分辨率）则回落到居中。
