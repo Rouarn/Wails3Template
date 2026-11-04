@@ -23,18 +23,32 @@ body,
   height: 100%;
 }
 
+html,
+body {
+  overflow: hidden;
+}
+
+/* Naive UI 的 NConfigProvider 会渲染一层 .n-config-provider，默认 height: auto，
+   会把 #app 的高度链断掉（实测 1024×617 时该层被撑到 1117px，导致侧栏只有内容高、
+   主区没有可滚区间）。这里显式锁高，保持 100% 链完整。 */
+.n-config-provider {
+  height: 100%;
+  min-height: 0;
+}
+
 body {
   margin: 0;
-  overflow: hidden;
   background: var(--app-bg);
   color: var(--text-strong);
   font-family: 'Lato', 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
+/* 视口单位兜底：即使上游高度链再次断开，外壳也不会塌成内容高度。 */
 .app-shell {
   display: flex;
   height: 100%;
+  height: 100vh;
   min-height: 0;
 }
 
@@ -43,6 +57,7 @@ body {
   flex: 0 0 232px;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
   /* 侧栏不随内容滚动，也不允许内部滚动条。 */
   overflow: hidden;
   background: var(--sidebar-bg);
@@ -51,10 +66,22 @@ body {
   box-sizing: border-box;
 }
 
+/* 侧栏导航区是唯一允许在侧栏内部滚动的区域，底部状态块固定不压缩。 */
+.app-sidebar__nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.app-sidebar__footer {
+  flex-shrink: 0;
+}
+
 .app-main {
   flex: 1 1 auto;
   height: 100%;
   min-width: 0;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
 }

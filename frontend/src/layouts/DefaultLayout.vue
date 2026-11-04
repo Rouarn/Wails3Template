@@ -25,14 +25,14 @@ const navItems = [
         </div>
       </div>
 
-      <nav class="flex flex-col gap-1">
+      <nav class="app-sidebar__nav flex flex-col gap-1">
         <router-link v-for="item in navItems" :key="item.name" :to="item.to" class="nav-item">
           <span :class="item.icon" class="text-lg" aria-hidden="true" />
           <span>{{ t(item.label) }}</span>
         </router-link>
       </nav>
 
-      <div class="mt-auto px-2 pt-6 text-xs" :style="{ color: 'var(--text-muted)' }">
+      <div class="app-sidebar__footer mt-auto px-2 pt-6 text-xs" :style="{ color: 'var(--text-muted)' }">
         <p>版本 {{ store.info?.version ?? '—' }}</p>
         <p class="mt-1">Go 单进程 + 系统 WebView</p>
       </div>
