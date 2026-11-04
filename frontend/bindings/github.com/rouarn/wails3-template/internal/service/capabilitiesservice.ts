@@ -67,6 +67,14 @@ export function PickFiles(): $CancellablePromise<contract$0.SelectedFiles> {
 }
 
 /**
+ * RunDemoTask 演示后端任务 + 事件流：按步推进并通过 app.task.progress 推送进度。
+ * 前端取消调用时 Wails 会取消 ctx，循环在下一步 select 时立即退出。
+ */
+export function RunDemoTask(steps: number, delayMs: number): $CancellablePromise<contract$0.TaskResult> {
+    return $Call.ByID(1470005262, steps, delayMs);
+}
+
+/**
  * SaveDemoFile 打开保存对话框并写入一段示例文本，返回实际落盘路径与字节数。
  */
 export function SaveDemoFile(): $CancellablePromise<contract$0.SavedFile> {

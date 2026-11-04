@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import {
@@ -11,14 +11,16 @@ import {
   pickDirectory,
   pickFiles,
   readClipboard,
+  runDemoTask,
   saveDemoFile,
   toggleCapabilityAlwaysOnTop,
   toggleCapabilityFullscreen,
   toggleCapabilityMaximise,
   writeClipboard,
 } from '../bridge/api'
-import type { SelectedFiles, SystemSummary, WindowState } from '../bridge/dto'
+import type { SelectedFiles, SystemSummary, TaskProgressEvent, WindowState } from '../bridge/dto'
 import { toAppError } from '../bridge/errors'
+import { onTaskProgress } from '../bridge/events'
 import { APP_ICONS } from '../icons'
 
 const { t } = useI18n()
@@ -56,6 +58,12 @@ const linkState = reactive(createState())
 const windowState = reactive(createState())
 const windowInfo = ref<WindowState | null>(null)
 const windowBusy = ref(false)
+
+const taskState = reactive(createState())
+const taskProgress = ref<TaskProgressEvent | null>(null)
+const taskRunning = ref(false)
+let taskCancel: (() => void) | null = null
+let stopTaskProgress: (() => void) | null = null
 
 const systemState = reactive(createState())
 const summary = ref<SystemSummary | null>(null)
@@ -120,6 +128,14 @@ const screenLabel = computed(() => {
 onMounted(() => {
   void refreshWindowState()
   void refreshSystemSummary()
+  stopTaskProgress = onTaskProgress((payload) => {
+    taskProgress.value = payload
+  })
+})
+
+onUnmounted(() => {
+  stopTaskProgress?.()
+  taskCancel?.()
 })
 
 function applyError(state: ActionState, error: unknown): void {
@@ -239,6 +255,34 @@ async function handleOpenLink(): Promise<void> {
   } catch (error) {
     applyError(linkState, error)
   }
+}
+
+async function handleRunTask(): Promise<void> {
+  taskState.kind = 'pending'
+  taskState.message = ''
+  taskProgress.value = null
+  taskRunning.value = true
+  const task = runDemoTask(10, 200)
+  taskCancel = task.cancel
+  try {
+    const result = await task.result
+    taskState.kind = 'ok'
+    taskState.message = t('capabilities.taskDone', { steps: result.steps })
+  } catch (error) {
+    if (toAppError(error).code === 'CANCELLED') {
+      taskState.kind = 'canceled'
+      taskState.message = t('capabilities.taskCancelled')
+    } else {
+      applyError(taskState, error)
+    }
+  } finally {
+    taskRunning.value = false
+    taskCancel = null
+  }
+}
+
+function handleCancelTask(): void {
+  taskCancel?.()
 }
 
 async function runWindowAction(action: () => Promise<WindowState>): Promise<void> {
@@ -425,6 +469,33 @@ async function refreshSystemSummary(): Promise<void> {
           <p v-if="linkState.kind === 'error'" class="cap-error">{{ linkState.message }}</p>
           <p v-else-if="linkState.kind === 'ok'" class="cap-note">{{ linkState.message }}</p>
           <p class="cap-hint">{{ t('capabilities.linkBlockedHint') }}</p>
+        </div>
+      </article>
+
+      <article class="cap-card">
+        <header class="cap-card__head">
+          <span class="cap-card__icon"><span :class="APP_ICONS.task" /></span>
+          <div>
+            <h2 class="cap-card__title">{{ t('capabilities.task') }}</h2>
+            <p class="cap-card__desc">{{ t('capabilities.taskDesc') }}</p>
+          </div>
+        </header>
+        <div class="cap-card__body">
+          <div class="cap-actions">
+            <n-button size="small" type="primary" data-cap="run-task" :loading="taskRunning" @click="handleRunTask">
+              {{ t('capabilities.taskStart') }}
+            </n-button>
+            <n-button size="small" data-cap="cancel-task" :disabled="!taskRunning" @click="handleCancelTask">
+              {{ t('capabilities.taskCancel') }}
+            </n-button>
+          </div>
+          <n-progress
+            type="line"
+            :percentage="taskProgress?.percent ?? 0"
+            :status="taskState.kind === 'error' ? 'error' : taskState.kind === 'ok' ? 'success' : 'default'"
+          />
+          <p class="cap-hint">{{ taskProgress?.message || taskState.message || t('capabilities.taskIdle') }}</p>
+          <p v-if="taskState.kind === 'error'" class="cap-error">{{ taskState.message }}</p>
         </div>
       </article>
 

@@ -19,6 +19,8 @@ func init() {
 	// 注册强类型事件，生成器会把事件名与数据类型带进 bindings。
 	application.RegisterEvent[contract.ClockEvent](contract.EventClock)
 	application.RegisterEvent[contract.StatusEvent](contract.EventStatus)
+	application.RegisterEvent[contract.NavigateEvent](contract.EventNavigate)
+	application.RegisterEvent[contract.TaskProgressEvent](contract.EventTaskProgress)
 }
 
 func main() {

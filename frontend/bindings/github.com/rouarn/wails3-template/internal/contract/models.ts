@@ -44,6 +44,13 @@ export interface ClockEvent {
 }
 
 /**
+ * NavigateEvent 由托盘菜单或系统入口触发，前端据此切换路由。
+ */
+export interface NavigateEvent {
+    "path": string;
+}
+
+/**
  * NotificationReceipt 是系统通知的投递回执。
  */
 export interface NotificationReceipt {
@@ -109,6 +116,25 @@ export interface SystemSummary {
     "language": string;
     "theme": string;
     "systemAppearance": string;
+}
+
+/**
+ * TaskProgressEvent 是后端任务 → 前端的进度流；它是「stream 示例」的传输方式。
+ */
+export interface TaskProgressEvent {
+    "step": number;
+    "total": number;
+    "percent": number;
+    "state": string;
+    "message": string;
+}
+
+/**
+ * TaskResult 是 RunDemoTask 的最终返回值。
+ */
+export interface TaskResult {
+    "steps": number;
+    "completed": boolean;
 }
 
 /**

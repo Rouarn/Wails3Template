@@ -5,6 +5,7 @@ export type {
     AppInfo,
     ClipboardText,
     ClockEvent,
+    NavigateEvent,
     NotificationReceipt,
     SavedFile,
     SelectedDirectory,
@@ -12,5 +13,7 @@ export type {
     Settings,
     StatusEvent,
     SystemSummary,
+    TaskProgressEvent,
+    TaskResult,
     WindowState
 } from "./models.js";

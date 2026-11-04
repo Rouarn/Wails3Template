@@ -14,7 +14,17 @@ import "../github.com/wailsapp/wails/v3/internal/eventcreate.js";
 export const AppClock = "app.clock";
 
 /**
+ * Name of the custom event "app.navigate".
+ */
+export const AppNavigate = "app.navigate";
+
+/**
  * Name of the custom event "app.status".
  */
 export const AppStatus = "app.status";
+
+/**
+ * Name of the custom event "app.task.progress".
+ */
+export const AppTaskProgress = "app.task.progress";
 

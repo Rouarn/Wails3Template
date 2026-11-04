@@ -14,6 +14,7 @@ import type {
   SelectedFiles,
   Settings,
   SystemSummary,
+  TaskResult,
   WindowState,
 } from './dto'
 import { run } from './errors'
@@ -95,6 +96,21 @@ export function readClipboard(): Promise<ClipboardText> {
 
 export function openExternalWithResult(url: string): Promise<void> {
   return invoke(CapabilitiesService.OpenExternal(url), '打开外部链接', 10_000)
+}
+
+export interface CancellableTask<T> {
+  result: Promise<T>
+  cancel: () => void
+}
+
+// RunDemoTask 是「stream 示例」的前端入口：进度通过 app.task.progress 事件推送，
+// 这里的 cancel 会中断 Go 侧 ctx，而不是只丢弃前端 Promise。
+export function runDemoTask(steps: number, delayMs: number): CancellableTask<TaskResult> {
+  const task = CapabilitiesService.RunDemoTask(steps, delayMs)
+  return {
+    result: run(task, { action: '运行演示任务', timeoutMs: 60_000, cancel: () => void task.cancel() }),
+    cancel: () => void task.cancel(),
+  }
 }
 
 export function getWindowState(): Promise<WindowState> {

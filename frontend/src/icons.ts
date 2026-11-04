@@ -22,6 +22,7 @@ export const APP_ICONS = {
   bell: 'i-lucide-bell',
   clipboard: 'i-lucide-clipboard',
   externalLink: 'i-lucide-external-link',
+  task: 'i-lucide-loader-circle',
 } as const
 
 export type AppIconName = keyof typeof APP_ICONS

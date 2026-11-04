@@ -2,6 +2,7 @@ import type {
   AppInfo,
   ClipboardText,
   ClockEvent,
+  NavigateEvent,
   NotificationReceipt,
   SavedFile,
   SelectedDirectory,
@@ -9,6 +10,8 @@ import type {
   Settings,
   StatusEvent,
   SystemSummary,
+  TaskProgressEvent,
+  TaskResult,
   WindowState,
 } from '@bindings/github.com/rouarn/wails3-template/internal/contract/models'
 
@@ -17,6 +20,7 @@ export type {
   AppInfo,
   ClipboardText,
   ClockEvent,
+  NavigateEvent,
   NotificationReceipt,
   SavedFile,
   SelectedDirectory,
@@ -24,5 +28,7 @@ export type {
   Settings,
   StatusEvent,
   SystemSummary,
+  TaskProgressEvent,
+  TaskResult,
   WindowState,
 }

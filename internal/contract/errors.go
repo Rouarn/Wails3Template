@@ -12,6 +12,7 @@ const (
 	CodeUnsupported      = "UNSUPPORTED"
 	CodePermissionDenied = "PERMISSION_DENIED"
 	CodeNotFound         = "NOT_FOUND"
+	CodeCancelled        = "CANCELLED"
 )
 
 // AppError 是前后端共享的结构化错误。

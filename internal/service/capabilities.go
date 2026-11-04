@@ -212,6 +212,52 @@ func (s *CapabilitiesService) OpenExternal(rawURL string) error {
 	return s.system.OpenExternal(rawURL)
 }
 
+// RunDemoTask 演示后端任务 + 事件流：按步推进并通过 app.task.progress 推送进度。
+// 前端取消调用时 Wails 会取消 ctx，循环在下一步 select 时立即退出。
+func (s *CapabilitiesService) RunDemoTask(ctx context.Context, steps int, delayMs int) (contract.TaskResult, error) {
+	return runDemoTask(ctx, steps, delayMs, func(event contract.TaskProgressEvent) {
+		s.app.Event.Emit(contract.EventTaskProgress, event)
+	}, waitOrCancel)
+}
+
+// eventEmitter 与 waitOrCancel 抽出来便于单测替换，不影响生产路径。
+type eventEmitter func(contract.TaskProgressEvent)
+
+// waitOrCancel 等待指定时长；ctx 先结束则返回 false，表示任务被取消。
+func waitOrCancel(ctx context.Context, delay time.Duration) bool {
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-timer.C:
+		return true
+	}
+}
+
+func runDemoTask(ctx context.Context, steps int, delayMs int, emit eventEmitter, wait func(context.Context, time.Duration) bool) (contract.TaskResult, error) {
+	if steps < 1 || steps > 20 {
+		return contract.TaskResult{}, contract.NewInvalidArgument("steps 超出范围", "允许 1–20")
+	}
+	if delayMs < 50 || delayMs > 2000 {
+		return contract.TaskResult{}, contract.NewInvalidArgument("delayMs 超出范围", "允许 50–2000 毫秒")
+	}
+	for step := 1; step <= steps; step++ {
+		if !wait(ctx, time.Duration(delayMs)*time.Millisecond) {
+			emit(contract.TaskProgressEvent{
+				Step: step - 1, Total: steps, Percent: (step - 1) * 100 / steps,
+				State: "cancelled", Message: "任务已取消",
+			})
+			return contract.TaskResult{}, contract.NewAppError(contract.CodeCancelled, "任务已取消")
+		}
+		emit(contract.TaskProgressEvent{
+			Step: step, Total: steps, Percent: step * 100 / steps,
+			State: "running", Message: fmt.Sprintf("已完成 %d/%d", step, steps),
+		})
+	}
+	return contract.TaskResult{Steps: steps, Completed: true}, nil
+}
+
 // MinimiseWindow 最小化主窗口并回传最新状态。
 func (s *CapabilitiesService) MinimiseWindow() contract.WindowState {
 	s.window.Minimise()

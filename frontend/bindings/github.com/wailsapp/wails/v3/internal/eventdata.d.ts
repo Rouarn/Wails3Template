@@ -13,7 +13,9 @@ declare module "@wailsio/runtime" {
     namespace Events {
         interface CustomEvents {
             "app.clock": contract$0.ClockEvent;
+            "app.navigate": contract$0.NavigateEvent;
             "app.status": contract$0.StatusEvent;
+            "app.task.progress": contract$0.TaskProgressEvent;
         }
     }
 }
