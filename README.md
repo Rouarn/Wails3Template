@@ -88,7 +88,7 @@ pnpm check:icons      # 校验图标类名在 iconify 集合里存在、且产�
 ## 架构约定
 
 - **契约单一来源**：Go 的 `internal/contract` 是唯一模型来源；前端类型全部来自生成的 `frontend/bindings`，不手写 DTO。
-- **生成产物入库**：`frontend/bindings` 提交到仓库；改 Go 服务后执行 `wails3 generate bindings -clean=true -ts -i` 并提交。本地用 `pnpm check:bindings` 防漂移，CI 也会在 `frontend/bindings` 上执行 `git diff --exit-code`（`macos-latest` / `windows-latest` / `ubuntu-24.04` 三平台矩阵）。
+- **生成产物入库**：`frontend/bindings` 提交到仓库；改 Go 服务后执行 `wails3 generate bindings -clean=true -ts -i` 并提交。本地用 `pnpm check:bindings` 防漂移，CI 也会在 `frontend/bindings` 上执行 `git diff --exit-code`（推送/PR 的 `ci.yml` 单 runner 执行）。
 - **图标单一来源**：所有图标类名集中在 `frontend/src/icons.ts` 的 `APP_ICONS`；UnoCSS 的 `safelist` 由该表生成，`scripts/check-icons.mjs` 在构建期校验「集合里存在 + 产物 CSS 里有规则」，动态拼接类名直接报错。
 - **错误回传**：Go 侧统一返回 `*contract.AppError`，经 `application.Options.MarshalError` 序列化为 `{code,message,details}`；前端 `src/bridge/errors.ts` 归一化并附加 15s 超时与取消。
 - **事件**：`app.clock` 每秒推送时间与运行时长，`app.status` 在启动完成/设置保存时推送，`app.task.progress` 推送可取消任务的进度，`app.navigate` 让托盘「设置」把前端跳到 `/settings`；前端只在 `src/bridge/events.ts` 订阅。
@@ -103,5 +103,5 @@ pnpm check:icons      # 校验图标类名在 iconify 集合里存在、且产�
 - macOS Developer ID 签名与公证：需要证书，模板只保留 `task darwin:sign` / `sign:notarize` 入口。
 - Linux WebKitGTK 渲染差异：未在 Linux 实机验证。
 - 托盘/关窗收托盘、窗口位置恢复：只在 macOS 本机验证（macOS 27.2 + Wails v3.1.0），Windows/Linux 未实机。
-- GitHub Actions 三平台矩阵：已跑通。run [41873515367](https://github.com/Rouarn/Wails3Template/actions/runs/41873515367) @ `0e39539`，`macos-latest`（625s）/ `windows-latest`（500s）/ `ubuntu-24.04`（1280s）三个 job 全部 success。
+- GitHub Actions：推送/PR 只跑检查与构建（`.github/workflows/ci.yml`，`ubuntu-24.04` 单 runner，含 bindings 漂移检测、`check:fe`、`check:go`、`pnpm build`，**不打包**）；打 tag `v*.*.*` 或手动 `workflow_dispatch` 才跑三平台打包并上传产物（`.github/workflows/release.yml`，tag 触发的产物会作为 Release 附件）。
 - 自动更新：未实现，也无接入点（代码中没有任何 `app.Updater` / `updater.Init` 引用）。
