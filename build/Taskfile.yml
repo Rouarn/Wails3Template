@@ -1,0 +1,90 @@
+version: '3'
+
+# 通用构建任务：只保留桌面端（darwin / windows / linux）。
+# 移动端（ios / android）与 server/docker 模式不在本模板范围内。
+
+tasks:
+  go:mod:tidy:
+    summary: 同步 Go 依赖
+    internal: true
+    # 多架构并行构建会重复触发，这里只跑一次，避免 go.mod 竞争。
+    run: once
+    cmds:
+      - go mod tidy
+
+  install:frontend:deps:
+    summary: 安装前端依赖（pnpm workspace 在仓库根目录执行）
+    run: once
+    dir: .
+    sources:
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - frontend/package.json
+    generates:
+      - node_modules
+    preconditions:
+      - sh: pnpm --version
+        msg: 'pnpm 未安装，请先执行：npm i -g pnpm@12'
+    cmds:
+      - pnpm install
+
+  build:frontend:
+    summary: 构建前端产物（DEV=true 时走不做类型检查的快速构建）
+    run: once
+    dir: frontend
+    sources:
+      - '**/*'
+      - exclude: node_modules/**/*
+    generates:
+      - dist/**/*
+    deps:
+      - task: install:frontend:deps
+      - task: generate:bindings
+    cmds:
+      - pnpm run {{if eq .DEV "true"}}build:dev{{else}}build{{end}}
+
+  generate:bindings:
+    summary: 由 Go 服务生成前端 bindings（产物入库，CI 校验漂移）
+    run: once
+    deps:
+      - task: go:mod:tidy
+    sources:
+      - '**/*.go'
+      - go.mod
+      - go.sum
+    generates:
+      - frontend/bindings/**/*
+    cmds:
+      - wails3 generate bindings -clean=true -ts -i
+
+  generate:icons:
+    summary: 由 appicon.png 生成各平台图标
+    run: once
+    dir: build
+    sources:
+      - 'appicon.png'
+      - 'appicon.icon'
+    generates:
+      - 'darwin/icons.icns'
+      - 'windows/icon.ico'
+    cmds:
+      - wails3 generate icons -input appicon.png -macfilename darwin/icons.icns -windowsfilename windows/icon.ico -iconcomposerinput appicon.icon -macassetdir darwin
+
+  dev:frontend:
+    summary: 启动前端开发服务器（wails3 dev 以 background 方式调用）
+    deps:
+      - task: install:frontend:deps
+    cmds:
+      - task: frontend:dev:pnpm
+
+  frontend:dev:pnpm:
+    dir: frontend
+    cmds:
+      - pnpm run dev -- --port {{.VITE_PORT}} --strictPort
+
+  update:build-assets:
+    summary: 依据 config.yml 重新生成平台资源（会覆盖手工修改）
+    dir: build
+    cmds:
+      - wails3 update build-assets -name "{{.APP_NAME}}" -binaryname "{{.APP_NAME}}" -config config.yml -dir .

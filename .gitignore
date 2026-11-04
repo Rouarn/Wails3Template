@@ -28,4 +28,5 @@ Thumbs.db
 # Wails / Go 中间产物
 *.syso
 .wails/
+.task/
 coverage/

@@ -1,0 +1,36 @@
+version: '3'
+
+vars:
+  APP_NAME: 'Wails3Template'
+  BIN_DIR: 'bin'
+  # 前端由 pnpm workspace 管理，构建入口固定为 pnpm（逻辑在 frontend/package.json）。
+  PACKAGE_MANAGER: 'pnpm'
+  VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
+  GOOS: '{{.GOOS | default OS}}'
+
+includes:
+  common: ./build/Taskfile.yml
+  windows: ./build/windows/Taskfile.yml
+  darwin: ./build/darwin/Taskfile.yml
+  linux: ./build/linux/Taskfile.yml
+
+tasks:
+  build:
+    summary: 构建当前平台的可执行文件
+    cmds:
+      - task: '{{.GOOS}}:build'
+
+  package:
+    summary: 打包当前平台的安装产物
+    cmds:
+      - task: '{{.GOOS}}:package'
+
+  run:
+    summary: 运行已构建的程序
+    cmds:
+      - task: '{{.GOOS}}:run'
+
+  dev:
+    summary: 开发模式（热重载），推荐走 pnpm dev 以自动挑选端口
+    cmds:
+      - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}

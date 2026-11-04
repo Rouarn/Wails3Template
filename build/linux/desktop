@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=Wails3Template
+Comment=基于 Wails v3 与 Vite Plus 的桌面应用模板
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/Wails3Template %u
+Terminal=false
+Type=Application
+Icon=Wails3Template
+Categories=Utility;
+StartupWMClass=Wails3Template
+
+ 

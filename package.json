@@ -1,0 +1,44 @@
+{
+  "name": "wails3-template",
+  "version": "0.1.0",
+  "private": true,
+  "description": "基于 Wails v3 + Vite Plus 的桌面应用模板，Go 单进程承载 WebView。",
+  "homepage": "https://github.com/Rouarn/Wails3Template",
+  "license": "UNLICENSED",
+  "author": {
+    "name": "woyuxiaji",
+    "email": "woyuxiaji@foxmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Rouarn/Wails3Template.git"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "wails3 build",
+    "build:frontend": "pnpm --filter @wails3-template/frontend build",
+    "package": "wails3 package",
+    "typecheck": "pnpm --filter @wails3-template/frontend typecheck",
+    "lint": "vp lint",
+    "lint:fix": "vp lint --fix",
+    "format": "vp fmt",
+    "format:check": "vp fmt --check",
+    "check": "vp check",
+    "check:bindings": "node scripts/check-bindings.mjs",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
+    "@types/node": "26.6.6",
+    "husky": "9.1.7",
+    "typescript": "6.0.3",
+    "vite-plus": "1.5.0"
+  },
+  "engines": {
+    "node": ">=22.18.0",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@12.16.1"
+}
