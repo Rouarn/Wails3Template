@@ -1,4 +1,4 @@
-import type { CancellablePromise } from '@wailsio/runtime'
+import { CancelError, type CancellablePromise } from '@wailsio/runtime'
 
 export interface AppErrorPayload {
   code: string
@@ -22,6 +22,11 @@ export function toAppError(error: unknown): AppErrorPayload {
     } catch {
       return { code: 'INTERNAL', message: error }
     }
+  }
+  // CancellablePromise.cancel() 会以 CancelError("Promise cancelled.") 拒绝，
+  // 它不是业务错误；归一成 CANCELLED，避免调用方把它当成 INTERNAL 显示成红色报错。
+  if (error instanceof CancelError) {
+    return { code: 'CANCELLED', message: '操作已取消' }
   }
   if (error instanceof Error) {
     return { code: 'INTERNAL', message: error.message }
