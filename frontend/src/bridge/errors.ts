@@ -1,4 +1,4 @@
-import { CancelError, type CancellablePromise } from '@wailsio/runtime'
+import { CancelError, CancelledRejectionError, type CancellablePromise } from '@wailsio/runtime'
 
 export interface AppErrorPayload {
   code: string
@@ -14,18 +14,47 @@ interface RunOptions {
 
 const defaultTimeoutMs = 15_000
 
+// Wails v3 运行时主动取消时的拒绝形态（见 @wailsio/runtime 的 cancellable.js）：
+// - CancelError，name = "CancelError"，message = "Promise cancelled."，cause 是 cancel() 的入参；
+// - CancelledRejectionError，name = "CancelledRejectionError"，取消后才 reject 时用它包一层。
+// DOM / AbortSignal 的取消统一是 AbortError；Go 侧 context 取消的原始文案是 "context canceled"。
+// 这里只做「精确名字或整串消息」判断，避免把包含 cancel 字样的真实错误一并吞掉。
+const cancellationNames = new Set(['CancelError', 'CancelledRejectionError', 'AbortError'])
+const cancellationMessages = new Set(['Promise cancelled.', 'canceled', 'cancelled', 'context canceled', 'context cancelled'])
+const cancelledRejectionPrefix = 'Unhandled rejection in cancelled promise.'
+
+function isCancellation(error: unknown): boolean {
+  if (error instanceof CancelError || error instanceof CancelledRejectionError) {
+    return true
+  }
+  if (typeof error === 'string') {
+    return cancellationMessages.has(error)
+  }
+  if (typeof error === 'object' && error !== null) {
+    const record = error as Record<string, unknown>
+    if (typeof record.name === 'string' && cancellationNames.has(record.name)) {
+      return true
+    }
+    if (typeof record.message === 'string') {
+      return cancellationMessages.has(record.message) || record.message.startsWith(cancelledRejectionPrefix)
+    }
+  }
+  return false
+}
+
 // 后端通过 MarshalError 返回 {code,message,details}，运行时可能以对象或 JSON 字符串抛回，这里统一归一化。
 export function toAppError(error: unknown): AppErrorPayload {
   if (typeof error === 'string') {
+    if (isCancellation(error)) {
+      return { code: 'CANCELLED', message: '操作已取消' }
+    }
     try {
       return toAppError(JSON.parse(error))
     } catch {
       return { code: 'INTERNAL', message: error }
     }
   }
-  // CancellablePromise.cancel() 会以 CancelError("Promise cancelled.") 拒绝，
-  // 它不是业务错误；归一成 CANCELLED，避免调用方把它当成 INTERNAL 显示成红色报错。
-  if (error instanceof CancelError) {
+  if (isCancellation(error)) {
     return { code: 'CANCELLED', message: '操作已取消' }
   }
   if (error instanceof Error) {
