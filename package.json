@@ -21,7 +21,7 @@
     "package": "node scripts/wails.mjs package",
     "cli:check": "node scripts/wails.mjs check",
     "typecheck": "pnpm --filter @wails3-template/frontend typecheck",
-    "test:fe": "node --experimental-strip-types frontend/scripts/check-cancel-errors.mjs",
+    "test:fe": "node --experimental-strip-types packages/frontend/scripts/check-cancel-errors.mjs",
     "lint": "vp lint",
     "lint:fix": "vp lint --fix",
     "format": "vp fmt",

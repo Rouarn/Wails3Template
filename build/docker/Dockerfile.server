@@ -54,7 +54,7 @@ FROM ${RUNTIME_IMAGE}
 COPY --from=builder /app/server /server
 
 # Copy frontend assets
-COPY --from=builder /app/frontend/dist /frontend/dist
+COPY --from=builder /app/packages/frontend/dist /frontend/dist
 
 # Expose the default port
 EXPOSE 8080

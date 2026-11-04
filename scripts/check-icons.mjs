@@ -12,9 +12,9 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const SRC_DIR = path.join(ROOT, 'frontend/src')
-const DIST_DIR = path.join(ROOT, 'frontend/dist')
-const ICONIFY_DIR = path.join(ROOT, 'frontend/node_modules/@iconify-json')
+const SRC_DIR = path.join(ROOT, 'packages/frontend/src')
+const DIST_DIR = path.join(ROOT, 'packages/frontend/dist')
+const ICONIFY_DIR = path.join(ROOT, 'packages/frontend/node_modules/@iconify-json')
 
 const SCAN_EXTENSIONS = new Set(['.vue', '.ts', '.js', '.mjs', '.html', '.css'])
 // 集合名不含连字符（lucide / mdi / carbon / tabler 都是一段）；图标名可以带连字符。
@@ -113,13 +113,13 @@ function main() {
   if (process.argv.includes('--dist')) {
     const dist = readDistCss()
     if (!dist) {
-      failures.push('frontend/dist 下没有 CSS 产物，请先执行 pnpm build:frontend')
+      failures.push('packages/frontend/dist 下没有 CSS 产物，请先执行 pnpm build:frontend')
     } else {
       distMissing = [...unique.keys()].filter((className) => !dist.some((file) => file.css.includes(`.${className}{`)))
       for (const className of distMissing) {
         const usage = unique.get(className)
         failures.push(
-          `${usage.location} 图标 ${className} 未生成到产物 CSS（frontend/dist/assets/*.css），UnoCSS 没扫到这个类名：请放进 src/icons.ts 的 APP_ICONS`,
+          `${usage.location} 图标 ${className} 未生成到产物 CSS（packages/frontend/dist/assets/*.css），UnoCSS 没扫到这个类名：请放进 src/icons.ts 的 APP_ICONS`,
         )
       }
     }

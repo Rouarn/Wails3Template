@@ -14,9 +14,9 @@ export default defineConfig({
     endOfLine: 'lf',
     // 生成产物、第三方平台资源与长文档都不参与格式化。
     ignorePatterns: [
-      'frontend/bindings/**',
-      'frontend/dist/**',
-      'frontend/src/components.d.ts',
+      'packages/frontend/bindings/**',
+      'packages/frontend/dist/**',
+      'packages/frontend/src/components.d.ts',
       'node_modules/**',
       '**/node_modules/**',
       'bin/**',
@@ -33,9 +33,9 @@ export default defineConfig({
   lint: {
     ignorePatterns: [
       'dist/**',
-      'frontend/dist/**',
-      'frontend/bindings/**',
-      'frontend/src/components.d.ts',
+      'packages/frontend/dist/**',
+      'packages/frontend/bindings/**',
+      'packages/frontend/src/components.d.ts',
       'bin/**',
       'build/bin/**',
       'node_modules/**',

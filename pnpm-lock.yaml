@@ -185,7 +185,7 @@ importers:
         specifier: 1.5.0
         version: 1.5.0(@types/node@26.6.6)(@vitest/ui@5.1.0)(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(jiti@2.7.0)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3))
 
-  frontend:
+  packages/frontend:
     dependencies:
       '@vueuse/core':
         specifier: 15.0.0

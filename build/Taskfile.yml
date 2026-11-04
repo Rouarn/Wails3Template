@@ -20,7 +20,7 @@ tasks:
       - package.json
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
-      - frontend/package.json
+      - packages/frontend/package.json
     generates:
       - node_modules
     preconditions:
@@ -32,7 +32,7 @@ tasks:
   build:frontend:
     summary: 构建前端产物（DEV=true 时走不做类型检查的快速构建）
     run: once
-    dir: frontend
+    dir: packages/frontend
     sources:
       - '**/*'
       - exclude: node_modules/**/*
@@ -44,7 +44,7 @@ tasks:
     cmds:
       - pnpm run {{if eq .DEV "true"}}build:dev{{else}}build{{end}}
       # 产物一致性：源码里用到的图标类名必须真的生成到 dist CSS 里。
-      - node ../scripts/check-icons.mjs --dist
+      - node ../../scripts/check-icons.mjs --dist
 
   generate:bindings:
     summary: 由 Go 服务生成前端 bindings（产物入库，CI 校验漂移）
@@ -56,9 +56,9 @@ tasks:
       - go.mod
       - go.sum
     generates:
-      - frontend/bindings/**/*
+      - packages/frontend/bindings/**/*
     cmds:
-      - node scripts/wails.mjs generate bindings -clean=true -ts -i
+      - node scripts/wails.mjs generate bindings -clean=true -ts -i -d packages/frontend/bindings
 
   generate:icons:
     summary: 由 appicon.png 生成各平台图标
@@ -81,7 +81,7 @@ tasks:
       - task: frontend:dev:pnpm
 
   frontend:dev:pnpm:
-    dir: frontend
+    dir: packages/frontend
     cmds:
       - pnpm run dev -- --port {{.VITE_PORT}} --strictPort
 

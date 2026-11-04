@@ -64,7 +64,7 @@ jobs:
         run: pnpm check:bindings
 
       - name: 契约漂移检测（确认无差异）
-        run: git diff --exit-code -- frontend/bindings
+        run: git diff --exit-code -- packages/frontend/bindings
 
       - name: 前端门禁
         run: pnpm check:fe
