@@ -103,5 +103,5 @@ pnpm check:icons      # 校验图标类名在 iconify 集合里存在、且产�
 - macOS Developer ID 签名与公证：需要证书，模板只保留 `task darwin:sign` / `sign:notarize` 入口。
 - Linux WebKitGTK 渲染差异：未在 Linux 实机验证。
 - 托盘/关窗收托盘、窗口位置恢复：只在 macOS 本机验证（macOS 27.2 + Wails v3.1.0），Windows/Linux 未实机。
-- GitHub Actions 三平台矩阵：workflow 已入库，但尚未在远端实际跑绿。
+- GitHub Actions 三平台矩阵：已跑通。run [41873515367](https://github.com/Rouarn/Wails3Template/actions/runs/41873515367) @ `0e39539`，`macos-latest`（625s）/ `windows-latest`（500s）/ `ubuntu-24.04`（1280s）三个 job 全部 success。
 - 自动更新：未实现，也无接入点（代码中没有任何 `app.Updater` / `updater.Init` 引用）。
