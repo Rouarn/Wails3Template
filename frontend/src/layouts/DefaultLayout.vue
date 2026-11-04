@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import brandStar from '../assets/brand-star.svg'
+import { APP_ICONS } from '../icons'
 import { useAppStore } from '../stores/app'
 
 const { t } = useI18n()
@@ -10,8 +11,8 @@ const route = useRoute()
 const store = useAppStore()
 
 const navItems = [
-  { name: 'home', to: '/', label: 'nav.home', icon: 'i-lucide-house' },
-  { name: 'settings', to: '/settings', label: 'nav.settings', icon: 'i-lucide-settings' },
+  { name: 'home', to: '/', label: 'nav.home', icon: APP_ICONS.navHome },
+  { name: 'settings', to: '/settings', label: 'nav.settings', icon: APP_ICONS.navSettings },
 ] as const
 
 // 激活项唯一来源：当前路由路径与菜单目标精确相等。

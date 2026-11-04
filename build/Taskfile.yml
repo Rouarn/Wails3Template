@@ -43,6 +43,8 @@ tasks:
       - task: generate:bindings
     cmds:
       - pnpm run {{if eq .DEV "true"}}build:dev{{else}}build{{end}}
+      # 产物一致性：源码里用到的图标类名必须真的生成到 dist CSS 里。
+      - node ../scripts/check-icons.mjs --dist
 
   generate:bindings:
     summary: 由 Go 服务生成前端 bindings（产物入库，CI 校验漂移）

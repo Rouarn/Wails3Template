@@ -7,6 +7,7 @@ import { closeWindow, markReady, minimiseWindow, setWindowTitle, toggleMaximiseW
 import type { ClockEvent, StatusEvent } from '../bridge/dto'
 import { toAppError } from '../bridge/errors'
 import { onClock, onStatus } from '../bridge/events'
+import { APP_ICONS } from '../icons'
 import { useAppStore } from '../stores/app'
 
 const { t } = useI18n()
@@ -158,19 +159,19 @@ async function handleSetTitle(): Promise<void> {
           <n-space>
             <n-button size="small" @click="runAction('最小化', minimiseWindow)">
               <template #icon>
-                <span class="i-lucide-minus" />
+                <span :class="APP_ICONS.windowMinimise" />
               </template>
               {{ t('home.minimise') }}
             </n-button>
             <n-button size="small" @click="handleToggleMaximise">
               <template #icon>
-                <span class="i-lucide-maximize" />
+                <span :class="APP_ICONS.windowMaximise" />
               </template>
               {{ t('home.maximise') }}
             </n-button>
             <n-button size="small" type="error" @click="runAction('关闭窗口', closeWindow)">
               <template #icon>
-                <span class="i-lucide-x" />
+                <span :class="APP_ICONS.windowClose" />
               </template>
               {{ t('home.close') }}
             </n-button>

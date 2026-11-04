@@ -56,6 +56,7 @@ pnpm package          # 当前平台安装包（macOS: .app/.dmg；Windows: NSIS
 pnpm typecheck        # vue-tsc 类型检查
 pnpm lint / pnpm format / pnpm format:check
 pnpm check:bindings   # 重新生成 bindings 并校验仓库产物无漂移
+pnpm check:icons      # 校验图标类名在 iconify 集合里存在、且产物 CSS 里真有对应规则
 ```
 
 首次运行前先执行 `pnpm install`；`go build ./...` 依赖 `frontend/dist`（`go:embed`），因此完整构建请走 `pnpm build`，或先执行 `pnpm build:frontend`。
@@ -84,6 +85,7 @@ pnpm check:bindings   # 重新生成 bindings 并校验仓库产物无漂移
 
 - **契约单一来源**：Go 的 `internal/contract` 是唯一模型来源；前端类型全部来自生成的 `frontend/bindings`，不手写 DTO。
 - **生成产物入库**：`frontend/bindings` 提交到仓库；改 Go 服务后执行 `wails3 generate bindings -clean=true -ts -i` 并提交。CI 用 `pnpm check:bindings` 防漂移。
+- **图标单一来源**：所有图标类名集中在 `frontend/src/icons.ts` 的 `APP_ICONS`；UnoCSS 的 `safelist` 由该表生成，`scripts/check-icons.mjs` 在构建期校验「集合里存在 + 产物 CSS 里有规则」，动态拼接类名直接报错。
 - **错误回传**：Go 侧统一返回 `*contract.AppError`，经 `application.Options.MarshalError` 序列化为 `{code,message,details}`；前端 `src/bridge/errors.ts` 归一化并附加 15s 超时与取消。
 - **事件**：`app.clock` 每秒推送时间与运行时长，`app.status` 在启动完成/设置保存时推送；前端只在 `src/bridge/events.ts` 订阅。
 - **安全基线**：资源响应带 CSP、导航与外部链接由 `src/bridge/links.ts` 拦截并交给 `SystemService.OpenExternal`（只放行 http/https/mailto）；`internal/infra/path.go` 负责路径越界与符号链接校验。
