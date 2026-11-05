@@ -5,7 +5,7 @@ node_modules/
 # 构建产物
 bin/
 dist/
-packages/frontend/dist/
+frontend/dist/
 build/bin/
 
 # 验证与调试产物（截图、日志）

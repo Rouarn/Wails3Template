@@ -3,7 +3,7 @@ version: '3'
 vars:
   APP_NAME: 'Wails3Template'
   BIN_DIR: 'bin'
-  # 前端由 pnpm workspace 管理，构建入口固定为 pnpm（逻辑在 packages/frontend/package.json）。
+  # 前端由 pnpm workspace 管理，构建入口固定为 pnpm（逻辑在 frontend/package.json）。
   PACKAGE_MANAGER: 'pnpm'
   VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
   GOOS: '{{.GOOS | default OS}}'

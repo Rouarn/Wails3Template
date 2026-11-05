@@ -12,7 +12,7 @@ import (
 
 // 前端产物通过 go:embed 打进二进制；dev 模式下由 WAILS_VITE_PORT 指定的开发服务器接管。
 //
-//go:embed all:packages/frontend/dist
+//go:embed all:frontend/dist
 var assets embed.FS
 
 func init() {
