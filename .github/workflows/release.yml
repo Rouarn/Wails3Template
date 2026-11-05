@@ -35,16 +35,16 @@ jobs:
         run: |
           case "${{ github.event_name == 'workflow_dispatch' && inputs.platform || 'all' }}" in
             all)
-              targets='[{"os":"macos-latest","platform":"darwin","task":"darwin:package"},{"os":"windows-latest","platform":"windows","task":"windows:package"},{"os":"ubuntu-24.04","platform":"linux","task":"linux:package"}]'
+              targets='[{"os":"macos-latest","platform":"darwin","arch":"arm64","task":"darwin:package:dmg"},{"os":"windows-latest","platform":"windows","arch":"x64","task":"windows:package"},{"os":"ubuntu-24.04","platform":"linux","arch":"x64","task":"linux:package"}]'
               ;;
             darwin)
-              targets='[{"os":"macos-latest","platform":"darwin","task":"darwin:package"}]'
+              targets='[{"os":"macos-latest","platform":"darwin","arch":"arm64","task":"darwin:package:dmg"}]'
               ;;
             windows)
-              targets='[{"os":"windows-latest","platform":"windows","task":"windows:package"}]'
+              targets='[{"os":"windows-latest","platform":"windows","arch":"x64","task":"windows:package"}]'
               ;;
             linux)
-              targets='[{"os":"ubuntu-24.04","platform":"linux","task":"linux:package"}]'
+              targets='[{"os":"ubuntu-24.04","platform":"linux","arch":"x64","task":"linux:package"}]'
               ;;
             *)
               echo "未知平台：${{ inputs.platform }}" >&2
@@ -107,11 +107,41 @@ jobs:
       - name: 打包
         run: wails3 task ${{ matrix.task }}
 
+      - name: 规范化产物名
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          if ! [[ "$VERSION" =~ ^[0-9] ]]; then
+            VERSION="$(sed -n "s/^  version: '\([^']*\)'.*/\1/p" build/config.yml | head -1)"
+          fi
+          ARCH="${{ matrix.arch }}"
+          case "${{ matrix.platform }}" in
+            darwin)
+              mv bin/*.dmg "bin/Wails3Template-${VERSION}-macos-${ARCH}.dmg"
+              ;;
+            windows)
+              mv bin/*-installer.exe "bin/Wails3Template-${VERSION}-windows-${ARCH}-setup.exe"
+              mv bin/Wails3Template.exe "bin/Wails3Template-${VERSION}-windows-${ARCH}-portable.exe"
+              ;;
+            linux)
+              mv bin/*.AppImage "bin/Wails3Template-${VERSION}-linux-${ARCH}.AppImage"
+              mv bin/Wails3Template.deb "bin/Wails3Template-${VERSION}-linux-${ARCH}.deb"
+              mv bin/Wails3Template.rpm "bin/Wails3Template-${VERSION}-linux-${ARCH}.rpm"
+              mv bin/Wails3Template.pkg.tar.zst "bin/Wails3Template-${VERSION}-linux-${ARCH}.pkg.tar.zst"
+              ;;
+            *)
+              echo "未知平台：${{ matrix.platform }}" >&2
+              exit 1
+              ;;
+          esac
+          ls -l bin
+
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-package
-          path: bin/
+          path: bin/Wails3Template-*
           if-no-files-found: error
           retention-days: 7
 
